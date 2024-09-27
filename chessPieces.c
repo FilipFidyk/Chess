@@ -2,12 +2,14 @@
 #include <stdio.h>
 #include "chessPieces.h"
 
-extern unsigned int firstClickCoords[2];
 extern unsigned int **board;
 extern unsigned int screenWidth;
 extern unsigned int screenHeight;
 
-//Create the 4 vertices per chess piece, each vertex has 5 attributes hence 4*5*pieces 
+/*
+Create the 4 vertices per chess piece, each vertex has 5 attributes hence 4*5*pieces attributes
+Chesspiece vertices are generated around the piece in the order: topleft, topright, bottomright, bottomleft
+*/
 float* createPieceVertices(unsigned int **chessPieces)
 {   
     float *pieceVertices = (float*)calloc(PIECE_VERTICES_NUMBER, sizeof(float));
@@ -49,18 +51,15 @@ float* createPieceVertices(unsigned int **chessPieces)
             }
         }
     }
-
-    for (int i = 0; i <20; i+=5 )
-        printf("%f %f %f %f %f\n", pieceVertices[i+0], pieceVertices[i+1], pieceVertices[i+2], pieceVertices[i+3], pieceVertices[i+4]);
     return pieceVertices;
 }
 
-//Create the indicesfor the pieces, 2 triangles per piece, 3 points per triangle, hence 3*2*pieces
+
 /*
-Chesspiece vertices are generated around the piece in the order: topleft, topright, bottomright, bottomleft
-To create the indices we also chesspiece location:
-    Column coordinate means an offset of a multiple of 4
-    row coordinate means an offset of a multiple of 32
+Create the indices for the pieces
+To create the indices we also use chesspiece location:
+    The column coordinate means an offset of a multiple of 4
+    THe row    coordinate means an offset of a multiple of 32
 
     Then add a value 0,1,2 or 3 to match which corner we want
 */
@@ -101,12 +100,11 @@ unsigned int* createPieceIndices(unsigned int **chessPieces)
     {
         printf("INDICES ADDED INCORRECTLY");
     }
-
-    for (int i = 0; i <6; i+=3 )
-        printf("%d %d %d\n", pieceIndices[i+0], pieceIndices[i+1], pieceIndices[i+2]);
    return pieceIndices;
 }
 
+//Checks if a chess piece exists where the user clicked
+//If so it outputs the coordinates of the piece and if not outputs -1 as coords
 void FindPiece(int* coordDest, double xpos, double ypos)
 {
     unsigned int xCoord = pixelToCoord(xpos), yCoord = pixelToCoord(ypos);
@@ -121,6 +119,8 @@ void FindPiece(int* coordDest, double xpos, double ypos)
     }
 }
 
+//Checks if where the user clicked for the second time isn't the same as the first
+//If so then nothing happens, if not then we move the piece in the 2D array
 void MovePiece(double nxpos, double nypos, int xCoord, int yCoord)
 {
     unsigned int nxCoord = pixelToCoord(nxpos), nyCoord = pixelToCoord(nypos);
@@ -130,11 +130,14 @@ void MovePiece(double nxpos, double nypos, int xCoord, int yCoord)
         board[nyCoord][nxCoord] = board[yCoord][xCoord];
         board[yCoord][xCoord] = 0;
     }
-
-    for (int i = 0;i<8;i++)
-        printf("%d %d %d %d %d %d %d %d\n", board[i][0], board[i][1], board[i][2], board[i][3], board[i][4], board[i][5], board[i][6], board[i][7]);
 }
 
+/*
+Converts the pixels given by glfwGetCursorPos() to a coordinate that can be used in the 2D board array
+Divides the pixel number by an eighth of the width or height depends on figuring the x or y 
+coordinate respectively
+Exception is if someone clicks perfectly on the edge of the screen we output 7
+*/
 unsigned int pixelToCoord(double val)
 {
     double coord = val / ((double)screenWidth / 8);
@@ -142,8 +145,6 @@ unsigned int pixelToCoord(double val)
     {
         coord = 7;
     }
-    
-    printf("%d\n", (unsigned int)coord);
 
     return (unsigned int)coord;
 }

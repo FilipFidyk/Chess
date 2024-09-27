@@ -166,7 +166,6 @@ void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceV
                 {
                     firstClick = 0;
                 }
-                usleep(500000);
             }
             else
             {
@@ -182,7 +181,6 @@ void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceV
                 glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, PIECE_INDICES_NUMBER*sizeof(unsigned int), createPieceIndices(board));
 
                 glBindVertexArray(0);
-                usleep(500000);
             }
         }
     }
