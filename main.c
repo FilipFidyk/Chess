@@ -2,14 +2,23 @@
 #include <glfw3.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "board.h"
 #include "shader.h"
 #include "chessPieces.h"
 #include "stb_image.h"
 
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window);
-void genVAO(unsigned int *VAO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int texturesVAO, unsigned int strideSize);
+void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceVBO, unsigned int pieceEBO);
+void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int texturesVAO, unsigned int strideSize);
+
+unsigned int screenWidth = 800;
+unsigned int screenHeight = 800;
+
+unsigned int **board;
+int previousMouseState = GLFW_RELEASE;
+int *firstClickCoords;
 
 int main()
 {
@@ -21,7 +30,7 @@ int main()
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     //Create the window
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Chess", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Chess", NULL, NULL);
     if (window == NULL)
     {
         printf("Failed to create GLFW window");
@@ -38,7 +47,7 @@ int main()
     }  
   
     //Set the size of the rendering window via a viewport
-    glViewport(0, 0, 800, 600);
+    glViewport(0, 0, screenWidth, screenHeight);
 
     //Register a callback function for resizing the window
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -48,19 +57,21 @@ int main()
 
     float *vertices = createBoardVertices();
     unsigned int *indices = createBoardIndices();
-    unsigned int boardVAO;
-    genVAO(&boardVAO, vertices, 3*81*sizeof(float), indices, 3*64*sizeof(unsigned int), 0, 3);
+    unsigned int boardVAO, boardVBO, boardEBO;
+    genVAO(&boardVAO, &boardVBO, &boardEBO, vertices, 3*81*sizeof(float), indices, 3*64*sizeof(unsigned int), 0, 3);
     free(vertices);
     free(indices);
 
     Shader *shaderPieces;
     Shader_init(&shaderPieces, "shaders/vPieceShader.txt", "shaders/fPieceShader.txt");
 
-    unsigned int **board = initChessBoard();
+    board = initChessBoard();
     vertices = createPieceVertices(board);
     indices = createPieceIndices(board);
-    unsigned int pieceVAO;
-    genVAO(&pieceVAO, vertices, 4*5*1*sizeof(float), indices, 3*2*1*sizeof(unsigned int), 1, 5);
+    unsigned int pieceVAO, pieceVBO, pieceEBO;
+    genVAO(&pieceVAO, &pieceVBO, &pieceEBO, vertices, PIECE_VERTICES_NUMBER*sizeof(float), indices, PIECE_INDICES_NUMBER*sizeof(unsigned int), 1, 5);
+    free(vertices);
+    free(indices);
     glBindVertexArray(pieceVAO);
     unsigned int texture;
 
@@ -98,25 +109,27 @@ int main()
     }
     stbi_image_free(data1);
 
-    glBindVertexArray(pieceVAO);
     Shader_setInt(&shaderPieces, "texture1", 0);
-
-    
+    glDisable(GL_DEPTH_TEST);
+    firstClickCoords = (int*)calloc(2,sizeof(int));
 
     //Polling loop to keep the window running
     while(!glfwWindowShouldClose(window))
     {
+        processInput(window, pieceVAO, pieceVBO, pieceEBO);
+        
         glClearColor(0.9f, 0.9f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glUseProgram(shaderBoard->ID);
         glBindVertexArray(boardVAO);
         glDrawElements(GL_TRIANGLES, 3*64, GL_UNSIGNED_INT, 0);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glUseProgram(shaderPieces->ID);
         glBindVertexArray(pieceVAO);
-        glDrawElements(GL_TRIANGLES, 3*2*1, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, PIECE_INDICES_NUMBER, GL_UNSIGNED_INT, 0);
         glDisable(GL_BLEND);
 
         glfwSwapBuffers(window);
@@ -132,39 +145,71 @@ int main()
     return 0;
 }
 
+unsigned int firstClick = 1;
 
-/*
 //Input processing example function
-void processInput(GLFWwindow *window)
+void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceVBO, unsigned int pieceEBO)
 {
-    //Every frame is checked if a button is in the pressed position, escape in this case
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    int currentMouseState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+    if (previousMouseState == GLFW_RELEASE && currentMouseState == GLFW_PRESS)
     {
-        glfwSetWindowShouldClose(window, 1);
+        if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+        {
+            int pieceExists;
+            double xpos, ypos;
+
+            glfwGetCursorPos(window, &xpos, &ypos);
+            if (firstClick)
+            {
+                FindPiece(firstClickCoords, xpos, ypos);
+                if (firstClickCoords[0] != -1)
+                {
+                    firstClick = 0;
+                }
+                usleep(500000);
+            }
+            else
+            {
+                MovePiece(xpos, ypos, firstClickCoords[0], firstClickCoords[1]);
+                firstClick = 1;
+
+                glBindVertexArray(pieceVAO);
+                
+                glBindBuffer(GL_ARRAY_BUFFER, pieceVBO);
+                glBufferSubData(GL_ARRAY_BUFFER, 0, PIECE_VERTICES_NUMBER*sizeof(float), createPieceVertices(board));
+
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pieceEBO);
+                glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, PIECE_INDICES_NUMBER*sizeof(unsigned int), createPieceIndices(board));
+
+                glBindVertexArray(0);
+                usleep(500000);
+            }
+        }
     }
+    previousMouseState = currentMouseState;
 }
-*/
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
+    screenWidth = width;
+    screenHeight = height;
     glViewport(0, 0, width, height);
 }
 
-void genVAO(unsigned int *VAO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int texturesVAO, unsigned int strideSize)
+void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int texturesVAO, unsigned int strideSize)
 {
-    unsigned int VBO, EBO;
     glGenVertexArrays(1, VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    glGenBuffers(1, VBO);
+    glGenBuffers(1, EBO);
 
     glBindVertexArray(*VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, *VBO);
     glBufferData(GL_ARRAY_BUFFER, verticesSize, vertices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesSize, indices, GL_STATIC_DRAW); 
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, strideSize * sizeof(float), (void*)0);

@@ -1,16 +1,23 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/*
+This function creates a lattice of vertices that forms 9 vertical and 9 horizontal lines.
+Each vertex has 3 coordinates so the total num is 3*81
+They're generated on the horizontal line then the next and so on
+*/
 float* createBoardVertices()
 {
     float *vertices = (float*)calloc(3*81, sizeof(float));
-    
     int vertexIndex = 0;
+    
+    //OpenGL screen does coordinates from -1.0,-1.0 (topleft) to 1.0,1.0 (bottom right)
+    //So the coordinates are set at those limits and 0.25 intervals
     for (int y = 0; y < 9; y++) {
         for (int x = 0; x < 9; x++) {
             vertices[vertexIndex++] = -1.0f + (x * 0.25f); // X position
             vertices[vertexIndex++] = 1.0f - (y * 0.25f); // Y position
-            vertices[vertexIndex++] = 0.0f; // Z position
+            vertices[vertexIndex++] = 1.0f; // Z position
         }
     }
 
@@ -23,6 +30,12 @@ float* createBoardVertices()
     return vertices;
 }
 
+/*
+Creates the indices that will be used to draw the coloured triangles that form squares on the board
+Forms the topright triangle then the bottom left and skips to the next square which should be 2 vertices away
+    Exceptions are vertices 17, 35 and 53 - row ends without a coloured square and the next one doesn't
+    start with one
+*/
 unsigned int* createBoardIndices()
 {
     //8 triangles per row, 8 columns so 64 triangles, each made of 3 vertices, hence 3*64 entries
@@ -48,6 +61,8 @@ unsigned int* createBoardIndices()
 
     return indices;
 }
+
+//Creates the 2d array in the heap and ----TODO---- inserts all the pieces into it
 unsigned int** initChessBoard()
 {
     unsigned int **chessPieces;

@@ -55,6 +55,8 @@
         "variant": "c",
         "importer.hpp": "c",
         "postprocess.h": "c",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "stdlib.h": "c",
+        "chesspieces.h": "c"
     }
 }

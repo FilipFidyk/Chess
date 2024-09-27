@@ -2,10 +2,15 @@
 #include <stdio.h>
 #include "chessPieces.h"
 
+extern unsigned int firstClickCoords[2];
+extern unsigned int **board;
+extern unsigned int screenWidth;
+extern unsigned int screenHeight;
+
 //Create the 4 vertices per chess piece, each vertex has 5 attributes hence 4*5*pieces 
 float* createPieceVertices(unsigned int **chessPieces)
 {   
-    float *pieceVertices = (float*)calloc(4*5*1, sizeof(float));
+    float *pieceVertices = (float*)calloc(PIECE_VERTICES_NUMBER, sizeof(float));
 
     unsigned int vertexAttribute = 0;
     for (int i = 0; i<8;i++)
@@ -45,10 +50,12 @@ float* createPieceVertices(unsigned int **chessPieces)
         }
     }
 
+    for (int i = 0; i <20; i+=5 )
+        printf("%f %f %f %f %f\n", pieceVertices[i+0], pieceVertices[i+1], pieceVertices[i+2], pieceVertices[i+3], pieceVertices[i+4]);
     return pieceVertices;
 }
 
-//Create the indices for the pieces, 2 triangles per piece, 3 points per triangle, hence 3*2*pieces
+//Create the indicesfor the pieces, 2 triangles per piece, 3 points per triangle, hence 3*2*pieces
 /*
 Chesspiece vertices are generated around the piece in the order: topleft, topright, bottomright, bottomleft
 To create the indices we also chesspiece location:
@@ -59,10 +66,10 @@ To create the indices we also chesspiece location:
 */
 unsigned int* createPieceIndices(unsigned int **chessPieces)
 {
-    unsigned int *pieceIndices = (unsigned int*)calloc(3*2*1, sizeof(unsigned int));
-
+    unsigned int *pieceIndices = (unsigned int*)calloc(PIECE_INDICES_NUMBER, sizeof(unsigned int));
     unsigned int indicesIndex = 0;
 
+    /*
     for (int i = 0; i<8;i++)
     {
         for (int j = 0; j<8; j++)
@@ -81,10 +88,62 @@ unsigned int* createPieceIndices(unsigned int **chessPieces)
             }
         }
     }
+    */
 
-    if (indicesIndex > 3*2*1)
+    pieceIndices[0] = 0;
+    pieceIndices[1] = 1;
+    pieceIndices[2] = 2;
+    pieceIndices[3] = 0;
+    pieceIndices[4] = 2;
+    pieceIndices[5] = 3;
+
+    if (indicesIndex > PIECE_INDICES_NUMBER)
     {
         printf("INDICES ADDED INCORRECTLY");
     }
+
+    for (int i = 0; i <6; i+=3 )
+        printf("%d %d %d\n", pieceIndices[i+0], pieceIndices[i+1], pieceIndices[i+2]);
    return pieceIndices;
+}
+
+void FindPiece(int* coordDest, double xpos, double ypos)
+{
+    unsigned int xCoord = pixelToCoord(xpos), yCoord = pixelToCoord(ypos);
+    if (board[yCoord][xCoord])
+    {
+        coordDest[0] = xCoord;
+        coordDest[1] = yCoord;
+    }
+    else{
+        coordDest[0] = -1;
+        coordDest[1] = -1;
+    }
+}
+
+void MovePiece(double nxpos, double nypos, int xCoord, int yCoord)
+{
+    unsigned int nxCoord = pixelToCoord(nxpos), nyCoord = pixelToCoord(nypos);
+    
+    if (xCoord != nxCoord || yCoord != nyCoord)
+    {
+        board[nyCoord][nxCoord] = board[yCoord][xCoord];
+        board[yCoord][xCoord] = 0;
+    }
+
+    for (int i = 0;i<8;i++)
+        printf("%d %d %d %d %d %d %d %d\n", board[i][0], board[i][1], board[i][2], board[i][3], board[i][4], board[i][5], board[i][6], board[i][7]);
+}
+
+unsigned int pixelToCoord(double val)
+{
+    double coord = val / ((double)screenWidth / 8);
+    if (coord >= 8)
+    {
+        coord = 7;
+    }
+    
+    printf("%d\n", (unsigned int)coord);
+
+    return (unsigned int)coord;
 }
