@@ -1,8 +1,8 @@
 #ifndef CHESS_PIECES_H
 #define CHESS_PIECES_H
 
-#define PIECE_VERTICES_NUMBER 4*6*1
-#define PIECE_INDICES_NUMBER 3*2*1
+#define PIECE_VERTICES_NUMBER 4*6*2
+#define PIECE_INDICES_NUMBER 3*2*2
 
 float* createPieceVertices(unsigned int **chessPieces);
 unsigned int* createPieceIndices(unsigned int **chessPieces);

@@ -5,17 +5,22 @@
 #include "textures.h"
 
 //Function that contains all the information about all the textures and loads them individually
-void loadAllTextures(Shader *shader)
-{
-    loadTexture(shader, GL_TEXTURE0, "images/chess-pawn.png", "texture1", 0);
+void loadAllTextures(Shader **shader)
+{   unsigned int texture1, texture2;
+    texture1 = loadTexture(shader, GL_TEXTURE0, "images/chess-pawn.png", "texture1", 0);
+    texture2 = loadTexture(shader, GL_TEXTURE1, "images/chess-rook.png", "texture2", 1);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture2);
 }
 
-void loadTexture(Shader *shader, GLenum activateTexture, const char* path, const char* uniformName, int uniformVal)
+unsigned int loadTexture(Shader **shader, GLenum activateTexture, const char* path, const char* uniformName, int uniformVal)
 {
     //Generating the gl texture id
     unsigned int texture;
     glGenTextures(1, &texture);
-    glActiveTexture(activateTexture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
     //Set the behaviour of the texture sampling in the s,t and r (x,y,z) directions
@@ -44,6 +49,7 @@ void loadTexture(Shader *shader, GLenum activateTexture, const char* path, const
     //Deallocating the image data since it is no longer necessary
     stbi_image_free(data1);
     //Setting the texture to the correct shader uniform 
-    Shader_setInt(&shader, uniformName, uniformVal);
+    Shader_setInt(shader, uniformName, uniformVal);
+    return texture;
 }
 

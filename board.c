@@ -72,15 +72,8 @@ unsigned int** initChessBoard()
         chessPieces[i] = (unsigned int*)calloc(8, sizeof(unsigned int));
     }
 
-    for (int i = 0; i<8;i++)
-    {
-        for (int j = 0; j<8; j++)
-        {
-            chessPieces[i][j] = 0;
-        }
-    }
-
     chessPieces[0][0] = 1;
+    chessPieces[0][1] = 2;
 
     return chessPieces;
 }

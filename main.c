@@ -53,10 +53,11 @@ int main()
     genVAO(&pieceVAO, &pieceVBO, &pieceEBO, vertices, PIECE_VERTICES_NUMBER*sizeof(float), indices, PIECE_INDICES_NUMBER*sizeof(unsigned int), 1, 6);
     free(vertices);
     free(indices);
+    glUseProgram(shaderPieces->ID);
     
     //---------------------------------------------------------------------------------
     //Load all textures
-    loadAllTextures(shaderPieces);
+    loadAllTextures(&shaderPieces);
 
     //---------------------------------------------------------------------------------
     //Other necessary set up
@@ -76,9 +77,13 @@ int main()
         glUseProgram(shaderBoard->ID);
         glBindVertexArray(boardVAO);
         glDrawElements(GL_TRIANGLES, 3*64, GL_UNSIGNED_INT, 0);
+
+
         glUseProgram(shaderPieces->ID);
         glBindVertexArray(pieceVAO);
         glDrawElements(GL_TRIANGLES, PIECE_INDICES_NUMBER, GL_UNSIGNED_INT, 0);
+
+
         glDisable(GL_BLEND);
 
         glfwSwapBuffers(window);

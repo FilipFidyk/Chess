@@ -27,7 +27,7 @@ float* createPieceVertices(unsigned int **chessPieces)
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
-                pieceVertices[vertexAttribute++] = 1.0f;
+                pieceVertices[vertexAttribute++] = (float)chessPieces[i][j];
 
                 //top right vertex
                 pieceVertices[vertexAttribute++] = -1.0f + ((j+1) *  0.25f);
@@ -35,7 +35,7 @@ float* createPieceVertices(unsigned int **chessPieces)
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
-                pieceVertices[vertexAttribute++] = 1.0f;
+                pieceVertices[vertexAttribute++] = (float)chessPieces[i][j];
 
                 //bottom right vertex
                 pieceVertices[vertexAttribute++] = -1.0f + ((j+1) *  0.25f);
@@ -43,7 +43,7 @@ float* createPieceVertices(unsigned int **chessPieces)
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
-                pieceVertices[vertexAttribute++] = 1.0f;
+                pieceVertices[vertexAttribute++] = (float)chessPieces[i][j];
 
                 //bottom left vertex
                 pieceVertices[vertexAttribute++] = -1.0f + (j *  0.25f);
@@ -51,10 +51,16 @@ float* createPieceVertices(unsigned int **chessPieces)
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
-                pieceVertices[vertexAttribute++] = 1.0f;
+                pieceVertices[vertexAttribute++] = (float)chessPieces[i][j];
             }
         }
     }
+
+    /* for (int i =0; i<4*6*2; i+=6)
+    {
+        printf("%f %f %f %f %f %f\n", pieceVertices[i], pieceVertices[i+1], pieceVertices[i+2], pieceVertices[i+3], pieceVertices[i+4], pieceVertices[i+5]);
+    } */
+
     return pieceVertices;
 }
 
@@ -99,6 +105,13 @@ unsigned int* createPieceIndices(unsigned int **chessPieces)
     pieceIndices[3] = 0;
     pieceIndices[4] = 2;
     pieceIndices[5] = 3;
+
+    pieceIndices[6] = 4;
+    pieceIndices[7] = 5;
+    pieceIndices[8] = 6;
+    pieceIndices[9] = 4;
+    pieceIndices[10] = 6;
+    pieceIndices[11] = 7;
 
     if (indicesIndex > PIECE_INDICES_NUMBER)
     {
