@@ -7,10 +7,11 @@
 #include "shader.h"
 #include "chessPieces.h"
 #include "stb_image.h"
+#include "textures.h"
 
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+GLFWwindow* initGLFW();
 void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceVBO, unsigned int pieceEBO);
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int texturesVAO, unsigned int strideSize);
 
 unsigned int screenWidth = 800;
@@ -22,36 +23,16 @@ int *firstClickCoords;
 
 int main()
 {
-    //instantiating the glfw window
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-    //Create the window
-    GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Chess", NULL, NULL);
+    //---------------------------------------------------------------------------------
+    //Initialise GLFW and GLAD
+    GLFWwindow *window = initGLFW();
     if (window == NULL)
     {
-        printf("Failed to create GLFW window");
-        glfwTerminate();
         return -1;
     }
-    glfwMakeContextCurrent(window);
-
-    //Initialise GLAD to handle GLFW function pointers
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        printf("Failed to initialize GLAD");
-        return -1;
-    }  
-  
-    //Set the size of the rendering window via a viewport
-    glViewport(0, 0, screenWidth, screenHeight);
-
-    //Register a callback function for resizing the window
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     
+    //---------------------------------------------------------------------------------
+    //Create shaders
     Shader *shaderBoard;
     Shader_init(&shaderBoard, "shaders/vShader.txt", "shaders/fShader.txt");
 
@@ -72,45 +53,13 @@ int main()
     genVAO(&pieceVAO, &pieceVBO, &pieceEBO, vertices, PIECE_VERTICES_NUMBER*sizeof(float), indices, PIECE_INDICES_NUMBER*sizeof(unsigned int), 1, 5);
     free(vertices);
     free(indices);
-    glBindVertexArray(pieceVAO);
-    unsigned int texture;
+    
+    //---------------------------------------------------------------------------------
+    //Load all textures
+    loadAllTextures(shaderPieces);
 
-    //Flip the verticality of an image
-    //Images expect the 0.0 y position to be on the top, opengl expects that on the bottom
-    stbi_set_flip_vertically_on_load(1);
-    
-    //TEXTURE 1
-    //Generating the gl texture id
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    //Set the behaviour of the texture sampling in the s,t and r (x,y,z) directions
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);                   
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    
-    //Set the the texture filtering method for scaling up and down, respectively
-    //Mipmaps can only be used in the scaling down
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    //Loading in the image
-    int width1, height1, nrChannels1;
-    unsigned char *data1 = stbi_load("images/chess-pawn.png", &width1, &height1, &nrChannels1, STBI_rgb_alpha); 
-    
-    if (data1)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width1, height1, 0, GL_RGBA, GL_UNSIGNED_BYTE, data1);
-        glGenerateMipmap(GL_TEXTURE_2D);    
-    }
-    else
-    {
-        printf("Failed to load texture");
-    }
-    stbi_image_free(data1);
-
-    Shader_setInt(&shaderPieces, "texture1", 0);
-    glDisable(GL_DEPTH_TEST);
+    //---------------------------------------------------------------------------------
+    //Other necessary set up
     firstClickCoords = (int*)calloc(2,sizeof(int));
 
     //Polling loop to keep the window running
@@ -144,23 +93,64 @@ int main()
     glfwTerminate(); 
     return 0;
 }
+GLFWwindow* initGLFW()
+{
+    //instantiating the glfw window
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+
+    //Create the window
+    GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Chess", NULL, NULL);
+    if (window == NULL)
+    {
+        printf("Failed to create GLFW window");
+        glfwTerminate();
+        return NULL;
+    }
+    glfwMakeContextCurrent(window);
+
+    //Initialise GLAD to handle GLFW function pointers
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        printf("Failed to initialize GLAD");
+        return NULL;
+    }  
+  
+    //Set the size of the rendering window via a viewport
+    glViewport(0, 0, screenWidth, screenHeight);
+
+    //Register a callback function for resizing the window
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    
+    //Flip the verticality of an image
+    //Images expect the 0.0 y position to be on the top, opengl expects that on the bottom
+    stbi_set_flip_vertically_on_load(1);
+    return window;
+}
 
 unsigned int firstClick = 1;
 
-//Input processing example function
+//The function that allows for moving pieces around the board
 void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceVBO, unsigned int pieceEBO)
 {
+    //input debouncing so that a mouse input isn't processed multiple times
     int currentMouseState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     if (previousMouseState == GLFW_RELEASE && currentMouseState == GLFW_PRESS)
-    {
+    {  
         if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
         {
-            int pieceExists;
+            //glfwGetCursorPos returns the pixel location of the cursor in doubles
             double xpos, ypos;
-
             glfwGetCursorPos(window, &xpos, &ypos);
+            
+            //The firstClick global flag the function on whether a piece has been selected or not 
             if (firstClick)
             {
+                //FindPiece finds the coordinates of where the user clicks and if a piece exists there
+                //it flips the flag
                 FindPiece(firstClickCoords, xpos, ypos);
                 if (firstClickCoords[0] != -1)
                 {
@@ -169,9 +159,11 @@ void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceV
             }
             else
             {
+                //When the flag is a 0 we move the piece to where the user click --TODO-- this is where take rules inhabit
                 MovePiece(xpos, ypos, firstClickCoords[0], firstClickCoords[1]);
                 firstClick = 1;
 
+                //This then requires modifying the buffers of the pieceVAO so that a correct state of the board can be rendered
                 glBindVertexArray(pieceVAO);
                 
                 glBindBuffer(GL_ARRAY_BUFFER, pieceVBO);
@@ -189,13 +181,13 @@ void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceV
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
+    // make sure the viewport matches the new window dimensions
     screenWidth = width;
     screenHeight = height;
     glViewport(0, 0, width, height);
 }
 
+//Very basic setup of VAOs, VBOs and EBOs, all data is passed in
 void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int texturesVAO, unsigned int strideSize)
 {
     glGenVertexArrays(1, VAO);

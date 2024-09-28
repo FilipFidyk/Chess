@@ -57,6 +57,11 @@
         "postprocess.h": "c",
         "iostream": "cpp",
         "stdlib.h": "c",
-        "chesspieces.h": "c"
+        "chesspieces.h": "c",
+        "stdio.h": "c",
+        "shader.h": "c",
+        "board.h": "c",
+        "unistd.h": "c",
+        "stb_image.h": "c"
     }
 }
