@@ -50,7 +50,7 @@ int main()
     vertices = createPieceVertices(board);
     indices = createPieceIndices(board);
     unsigned int pieceVAO, pieceVBO, pieceEBO;
-    genVAO(&pieceVAO, &pieceVBO, &pieceEBO, vertices, PIECE_VERTICES_NUMBER*sizeof(float), indices, PIECE_INDICES_NUMBER*sizeof(unsigned int), 1, 5);
+    genVAO(&pieceVAO, &pieceVBO, &pieceEBO, vertices, PIECE_VERTICES_NUMBER*sizeof(float), indices, PIECE_INDICES_NUMBER*sizeof(unsigned int), 1, 6);
     free(vertices);
     free(indices);
     
@@ -209,6 +209,8 @@ void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vert
     {
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, strideSize * sizeof(float), (void*)(3*sizeof(float)));
         glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, strideSize * sizeof(float), (void*)(5*sizeof(float)));
+        glEnableVertexAttribArray(2);
     }
 
     glBindVertexArray(0);

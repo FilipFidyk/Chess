@@ -27,11 +27,13 @@ float* createPieceVertices(unsigned int **chessPieces)
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
+                pieceVertices[vertexAttribute++] = 1.0f;
 
                 //top right vertex
                 pieceVertices[vertexAttribute++] = -1.0f + ((j+1) *  0.25f);
                 pieceVertices[vertexAttribute++] =  1.0f + (i * -0.25f);
                 pieceVertices[vertexAttribute++] = 0.0f;
+                pieceVertices[vertexAttribute++] = 1.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
 
@@ -41,6 +43,7 @@ float* createPieceVertices(unsigned int **chessPieces)
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
+                pieceVertices[vertexAttribute++] = 1.0f;
 
                 //bottom left vertex
                 pieceVertices[vertexAttribute++] = -1.0f + (j *  0.25f);
@@ -48,6 +51,7 @@ float* createPieceVertices(unsigned int **chessPieces)
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
+                pieceVertices[vertexAttribute++] = 1.0f;
             }
         }
     }
