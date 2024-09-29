@@ -6,8 +6,9 @@
 
 float* createPieceVertices(int **chessPieces);
 unsigned int* createPieceIndices(int **chessPieces);
-void FindPiece(int* coordDest, double xpos, double ypos);
-void MovePiece(double nxpos, double nypos, int xCoord, int yCoord);
+void FindPiece(int **board, int* coordDest, double xpos, double ypos);
+void MovePiece(int **board, double nxpos, double nypos, int xCoord, int yCoord);
+void setAvailableMoves(int **board, unsigned int xCoord, unsigned int yCoord);
 unsigned int pixelToCoord(double val);
 
 #endif //CHESS_PIECES_H

@@ -1,8 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include "chessPieces.h"
+#include "board.h"
 
-extern int **board;
+//extern int **board;
 extern unsigned int screenWidth;
 extern unsigned int screenHeight;
 
@@ -10,7 +12,7 @@ extern unsigned int screenHeight;
 Create the 4 vertices per chess piece, each vertex has 6 attributes hence 4*6*pieces attributes
 Chesspiece vertices are generated around the piece in the order: topleft, topright, bottomright, bottomleft
 */
-float* createPieceVertices(int **chessPieces)
+float* createPieceVertices(int **board)
 {   
     float *pieceVertices = (float*)calloc(PIECE_VERTICES_NUMBER, sizeof(float));
 
@@ -19,7 +21,7 @@ float* createPieceVertices(int **chessPieces)
     {
         for (int j = 0; j<8; j++)
         {
-            if (chessPieces[i][j])
+            if (board[i][j])
             {
                 //top left vertex
                 pieceVertices[vertexAttribute++] = -1.0f + (j *  0.25f);
@@ -27,7 +29,18 @@ float* createPieceVertices(int **chessPieces)
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
-                pieceVertices[vertexAttribute++] = (float)chessPieces[i][j];
+                if(board[i][j] >= 10)
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j] - 10.0f;
+                }
+                else if (board[i][j] < -10)
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j] + 10.0f;
+                }
+                else 
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j];     
+                }
 
                 //top right vertex
                 pieceVertices[vertexAttribute++] = -1.0f + ((j+1) *  0.25f);
@@ -35,7 +48,18 @@ float* createPieceVertices(int **chessPieces)
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
-                pieceVertices[vertexAttribute++] = (float)chessPieces[i][j];
+                if(board[i][j] >= 10)
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j] - 10.0f;
+                }
+                else if (board[i][j] < -10)
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j] + 10.0f;
+                }
+                else 
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j];     
+                }
 
                 //bottom right vertex
                 pieceVertices[vertexAttribute++] = -1.0f + ((j+1) *  0.25f);
@@ -43,7 +67,18 @@ float* createPieceVertices(int **chessPieces)
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
-                pieceVertices[vertexAttribute++] = (float)chessPieces[i][j];
+                if(board[i][j] >= 10)
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j] - 10.0f;
+                }
+                else if (board[i][j] < -10)
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j] + 10.0f;
+                }
+                else 
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j];     
+                }
 
                 //bottom left vertex
                 pieceVertices[vertexAttribute++] = -1.0f + (j *  0.25f);
@@ -51,15 +86,21 @@ float* createPieceVertices(int **chessPieces)
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
-                pieceVertices[vertexAttribute++] = (float)chessPieces[i][j];
+                if(board[i][j] >= 10)
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j] - 10.0f;
+                }
+                else if (board[i][j] < -10)
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j] + 10.0f;
+                }
+                else 
+                {
+                    pieceVertices[vertexAttribute++] = (float)board[i][j];     
+                }
             }
         }
     }
-
-    /* for (int i =0; i<4*6*12; i+=6)
-    {
-        printf("%f %f %f %f %f %f\n\n", pieceVertices[i], pieceVertices[i+1], pieceVertices[i+2], pieceVertices[i+3], pieceVertices[i+4], pieceVertices[i+5]);
-    }  */
 
     return pieceVertices;
 }
@@ -111,13 +152,17 @@ unsigned int* createPieceIndices(int **chessPieces)
 
 //Checks if a chess piece exists where the user clicked
 //If so it outputs the coordinates of the piece and if not outputs -1 as coords
-void FindPiece(int* coordDest, double xpos, double ypos)
+void FindPiece(int **board, int* coordDest, double xpos, double ypos)
 {
     unsigned int xCoord = pixelToCoord(xpos), yCoord = pixelToCoord(ypos);
     if (board[yCoord][xCoord])
     {
         coordDest[0] = xCoord;
         coordDest[1] = yCoord;
+
+        /* Adjust the board to find available places*/
+        setAvailableMoves(board, xCoord, yCoord);
+
     }
     else{
         coordDest[0] = -1;
@@ -127,7 +172,7 @@ void FindPiece(int* coordDest, double xpos, double ypos)
 
 //Checks if where the user clicked for the second time isn't the same as the first
 //If so then nothing happens, if not then we move the piece in the 2D array
-void MovePiece(double nxpos, double nypos, int xCoord, int yCoord)
+void MovePiece(int **board, double nxpos, double nypos, int xCoord, int yCoord)
 {
     unsigned int nxCoord = pixelToCoord(nxpos), nyCoord = pixelToCoord(nypos);
     
@@ -135,6 +180,65 @@ void MovePiece(double nxpos, double nypos, int xCoord, int yCoord)
     {
         board[nyCoord][nxCoord] = board[yCoord][xCoord];
         board[yCoord][xCoord] = 0;
+    }
+}
+
+
+/*
+Sets Legal Moves on the table 
+    A free box that piece can move into is set as a box
+    a legal take changes the value of the piece by a set amount, positive for white, negative for black
+
+ */
+void setAvailableMoves(int **board, unsigned int xCoord, unsigned int yCoord)
+{
+    switch (board[yCoord][xCoord])
+    {
+    case WHITE_PAWN:
+        //SETTING LEGAL MOVES
+        //If the square ahead is free set it to available and check the next one as well
+        if (!board[yCoord-1][xCoord])
+        {
+            board[yCoord-1][xCoord] = FREE_BOX;
+            
+            //Check if it is the first move and if the second box is free
+            if (!board[yCoord-2][xCoord] && yCoord == 6)
+            {
+                board[yCoord-2][xCoord] = FREE_BOX;   
+            }
+        }
+
+        //SETTING LEGAL TAKES
+        //Edge case when the pawn is on the far right
+        if (xCoord == 7)
+        {
+            if (board[yCoord-1][xCoord-1] < 0)
+            {
+                board[yCoord-1][xCoord-1] -= 10;
+            }
+        }
+        //Edge case when the pawn is on the far left
+        else if (xCoord == 0)
+        {
+            if (board[yCoord-1][xCoord+1] < 0)
+            {
+                board[yCoord-1][xCoord+1] -= 10;
+            }
+        }
+        //Regular case of the pawn in the middle
+        else
+        {
+            if (board[yCoord-1][xCoord-1] < 0)
+            {
+                board[yCoord-1][xCoord-1] -= 10;
+            }
+
+            if (board[yCoord-1][xCoord-1] < 0)
+            {
+                board[yCoord-1][xCoord-1] -= 10;
+            }
+        }
+        break;
     }
 }
 

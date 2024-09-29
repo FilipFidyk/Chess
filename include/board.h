@@ -18,7 +18,9 @@
 #define BLACK_QUEEN -5
 #define BLACK_KING -6
 
-float* createBoardVertices();
+#define FREE_BOX 10
+
+float* createBoardVertices(int **board);
 unsigned int* createBoardIndices();
 int** initChessBoard();
 

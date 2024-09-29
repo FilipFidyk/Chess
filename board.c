@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 #include "board.h"
 
 /*
@@ -7,7 +8,7 @@ This function creates a corner vertices for square on the checkered board.
 Each vertex has 3 coordinates and 1 colour attribute so the total num is 4*4*64
 They're generated from top-left to bottom-right
 */
-float* createBoardVertices()
+float* createBoardVertices(int **board)
 {
     float *vertices = (float*)calloc(BOARD_VERTICES_NUMBER, sizeof(float));
     int vertexIndex = 0, colourSelectFlag = 1;
@@ -23,25 +24,69 @@ float* createBoardVertices()
             vertices[vertexIndex++] = -1.0f + (x * 0.25f);      // X position
             vertices[vertexIndex++] = 1.0f - (y * 0.25f);       // Y position
             vertices[vertexIndex++] = 1.0f;                     // Z position
-            vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+            if(board[y][x] == 10)
+            {
+                vertices[vertexIndex++] = 2.0f;
+            }
+            else if (board[y][x] > 10 || board[y][x] < -10)
+            {
+                vertices[vertexIndex++] = 3.0f;
+            }
+            else 
+            {
+                vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+            }
 
             //top right
             vertices[vertexIndex++] = -1.0f + ((x+1) * 0.25f);  // X position
             vertices[vertexIndex++] = 1.0f - (y * 0.25f);       // Y position
             vertices[vertexIndex++] = 1.0f;                     // Z position
-            vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+            if(board[y][x] == 10)
+            {
+                vertices[vertexIndex++] = 2.0f;
+            }
+            else if (board[y][x] > 10 || board[y][x] < -10)
+            {
+                vertices[vertexIndex++] = 3.0f;
+            }
+            else 
+            {
+                vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+            }
 
             //bottom right
             vertices[vertexIndex++] = -1.0f + ((x+1) * 0.25f);  // X position
             vertices[vertexIndex++] = 1.0f - ((y+1) * 0.25f);   // Y position
             vertices[vertexIndex++] = 1.0f;                     // Z position
-            vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+            if(board[y][x] == 10)
+            {
+                vertices[vertexIndex++] = 2.0f;
+            }
+            else if (board[y][x] > 10 || board[y][x] < -10)
+            {
+                vertices[vertexIndex++] = 3.0f;
+            }
+            else 
+            {
+                vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+            }
 
             //bottom left
             vertices[vertexIndex++] = -1.0f + (x * 0.25f);      // X position
             vertices[vertexIndex++] = 1.0f - ((y+1) * 0.25f);   // Y position
             vertices[vertexIndex++] = 1.0f;                     // Z position
-            vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+            if(board[y][x] == 10)
+            {
+                vertices[vertexIndex++] = 2.0f;
+            }
+            else if (board[y][x] > 10 || board[y][x] < -10)
+            {
+                vertices[vertexIndex++] = 3.0f;
+            }
+            else 
+            {
+                vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+            }
 
             colourSelectFlag *= -1;
         }
@@ -98,19 +143,19 @@ int** initChessBoard()
         chessPieces[i] = (int*)calloc(8, sizeof(int));
     }
 
-    chessPieces[0][0] = WHITE_PAWN;
-    chessPieces[0][1] = WHITE_ROOK;
-    chessPieces[0][2] = WHITE_KNIGHT;
-    chessPieces[0][3] = WHITE_BISHOP;
-    chessPieces[0][4] = WHITE_QUEEN;
-    chessPieces[0][5] = WHITE_KING;
+    chessPieces[6][0] = WHITE_PAWN;
+    chessPieces[7][1] = WHITE_ROOK;
+    chessPieces[7][2] = WHITE_KNIGHT;
+    chessPieces[7][3] = WHITE_BISHOP;
+    chessPieces[7][4] = WHITE_QUEEN;
+    chessPieces[7][5] = WHITE_KING;
 
-    chessPieces[7][0] = BLACK_PAWN;
-    chessPieces[7][1] = BLACK_ROOK;
-    chessPieces[7][2] = BLACK_KNIGHT;
-    chessPieces[7][3] = BLACK_BISHOP;
-    chessPieces[7][4] = BLACK_QUEEN;
-    chessPieces[7][5] = BLACK_KING;
+    chessPieces[5][1] = BLACK_PAWN;
+    chessPieces[0][1] = BLACK_ROOK;
+    chessPieces[0][2] = BLACK_KNIGHT;
+    chessPieces[0][3] = BLACK_BISHOP;
+    chessPieces[0][4] = BLACK_QUEEN;
+    chessPieces[0][5] = BLACK_KING;
 
 
     return chessPieces;

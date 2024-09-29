@@ -10,9 +10,10 @@
 #include "textures.h"
 
 GLFWwindow* initGLFW();
-void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceVBO, unsigned int pieceEBO);
+void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceVBO, unsigned int pieceEBO, unsigned int boardVAO, unsigned int boardVBO, unsigned int boardEBO);
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int texturesVAO, unsigned int strideSize);
+void subVAO(unsigned int VAO, unsigned int VBO, unsigned int EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize);
 
 unsigned int screenWidth = 800;
 unsigned int screenHeight = 800;
@@ -36,7 +37,9 @@ int main()
     Shader *shaderBoard;
     Shader_init(&shaderBoard, "shaders/vShader.txt", "shaders/fShader.txt");
 
-    float *vertices = createBoardVertices();
+    board = initChessBoard();
+
+    float *vertices = createBoardVertices(board);
     unsigned int *indices = createBoardIndices();
     unsigned int boardVAO, boardVBO, boardEBO;
     genVAO(&boardVAO, &boardVBO, &boardEBO, vertices, BOARD_VERTICES_NUMBER*sizeof(float), indices, BOARD_INDICES_NUMBER*sizeof(unsigned int), 0, 4);
@@ -46,7 +49,6 @@ int main()
     Shader *shaderPieces;
     Shader_init(&shaderPieces, "shaders/vPieceShader.txt", "shaders/fPieceShader.txt");
 
-    board = initChessBoard();
     vertices = createPieceVertices(board);
     indices = createPieceIndices(board);
     unsigned int pieceVAO, pieceVBO, pieceEBO;
@@ -66,7 +68,7 @@ int main()
     //Polling loop to keep the window running
     while(!glfwWindowShouldClose(window))
     {
-        processInput(window, pieceVAO, pieceVBO, pieceEBO);
+        processInput(window, pieceVAO, pieceVBO, pieceEBO, boardVAO, boardVBO, boardEBO);
         
         glClearColor(0.9f, 0.9f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -139,7 +141,7 @@ GLFWwindow* initGLFW()
 unsigned int firstClick = 1;
 
 //The function that allows for moving pieces around the board
-void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceVBO, unsigned int pieceEBO)
+void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceVBO, unsigned int pieceEBO, unsigned int boardVAO, unsigned int boardVBO, unsigned int boardEBO)
 {
     //input debouncing so that a mouse input isn't processed multiple times
     int currentMouseState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
@@ -156,28 +158,25 @@ void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceV
             {
                 //FindPiece finds the coordinates of where the user clicks and if a piece exists there
                 //it flips the flag
-                FindPiece(firstClickCoords, xpos, ypos);
+                FindPiece(board, firstClickCoords, xpos, ypos);
                 if (firstClickCoords[0] != -1)
                 {
                     firstClick = 0;
                 }
+                for (int i =0; i<8; i++)
+                {
+                    printf("%d %d %d %d %d %d %d %d\n", board[i][0], board[i][1], board[i][2], board[i][3], board[i][4], board[i][5], board[i][6], board[i][6]);
+                } 
+                subVAO(boardVAO, boardVBO, boardEBO, createBoardVertices(board), BOARD_VERTICES_NUMBER*sizeof(float), createBoardIndices(board), BOARD_INDICES_NUMBER*sizeof(unsigned int));
             }
             else
             {
                 //When the flag is a 0 we move the piece to where the user click --TODO-- this is where take rules inhabit
-                MovePiece(xpos, ypos, firstClickCoords[0], firstClickCoords[1]);
+                MovePiece(board, xpos, ypos, firstClickCoords[0], firstClickCoords[1]);
                 firstClick = 1;
 
                 //This then requires modifying the buffers of the pieceVAO so that a correct state of the board can be rendered
-                glBindVertexArray(pieceVAO);
-                
-                glBindBuffer(GL_ARRAY_BUFFER, pieceVBO);
-                glBufferSubData(GL_ARRAY_BUFFER, 0, PIECE_VERTICES_NUMBER*sizeof(float), createPieceVertices(board));
-
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pieceEBO);
-                glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, PIECE_INDICES_NUMBER*sizeof(unsigned int), createPieceIndices(board));
-
-                glBindVertexArray(0);
+                subVAO(pieceVAO, pieceVBO, pieceEBO, createPieceVertices(board), PIECE_VERTICES_NUMBER*sizeof(float), createPieceIndices(board), PIECE_INDICES_NUMBER*sizeof(unsigned int));
             }
         }
     }
@@ -222,6 +221,19 @@ void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vert
         glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, strideSize * sizeof(float), (void*)(5*sizeof(float)));
         glEnableVertexAttribArray(2);
     }
+
+    glBindVertexArray(0);
+}
+
+void subVAO(unsigned int VAO, unsigned int VBO, unsigned int EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize)
+{
+    glBindVertexArray(VAO);
+                
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, verticesSize, vertices);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indicesSize, indices);
 
     glBindVertexArray(0);
 }
