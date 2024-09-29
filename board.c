@@ -3,9 +3,9 @@
 #include "board.h"
 
 /*
-This function creates a lattice of vertices that forms 9 vertical and 9 horizontal lines.
-Each vertex has 3 coordinates so the total num is 3*81
-They're generated on the horizontal line then the next and so on
+This function creates a corner vertices for square on the checkered board.
+Each vertex has 3 coordinates and 1 colour attribute so the total num is 4*4*64
+They're generated from top-left to bottom-right
 */
 float* createBoardVertices()
 {
@@ -13,8 +13,9 @@ float* createBoardVertices()
     int vertexIndex = 0, colourSelectFlag = 1;
     
     //OpenGL screen does coordinates from -1.0,-1.0 (topleft) to 1.0,1.0 (bottom right)
-    //So the coordinates are set at those limits and 0.25 intervals
+    //So the coordinates are set at those limits and then offset by a multiple of 0.25
     for (int y = 0; y < 8; y++) {
+        //The initialise colour is set in the shader but to choose the right one we have a flag that flips polarity
         colourSelectFlag *= -1;
         for (int x = 0; x < 8; x++) {
 
@@ -64,10 +65,11 @@ Forms the topright triangle then the bottom left and skips to the next square wh
 */
 unsigned int* createBoardIndices()
 {
-    //8 triangles per row, 8 columns so 64 triangles, each made of 3 vertices, hence 3*64 entries
+    //64 squares, 2 triangles each and 3 indices each, hence 2*3*64 entries
     unsigned int *boardIndices = (unsigned int*)calloc(BOARD_INDICES_NUMBER, sizeof(unsigned int));
     unsigned int vertexOffset=0;
 
+    //Generated for every box, so an offset of a multiple of 4
     for (int i = 0; i < BOARD_INDICES_NUMBER; i += 6)
     {
             //Top right triangle
