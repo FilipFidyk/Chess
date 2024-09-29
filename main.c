@@ -17,7 +17,7 @@ void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vert
 unsigned int screenWidth = 800;
 unsigned int screenHeight = 800;
 
-unsigned int **board;
+int **board;
 int previousMouseState = GLFW_RELEASE;
 int *firstClickCoords;
 

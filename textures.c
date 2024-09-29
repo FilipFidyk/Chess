@@ -6,17 +6,29 @@
 
 //Function that contains all the information about all the textures and loads them individually
 void loadAllTextures(Shader **shader)
-{   unsigned int texture1, texture2;
-    texture1 = loadTexture(shader, GL_TEXTURE0, "images/chess-pawn.png", "texture1", 0);
-    texture2 = loadTexture(shader, GL_TEXTURE1, "images/chess-rook.png", "texture2", 1);
+{   unsigned int *textures = (unsigned int*)calloc(12, sizeof(unsigned int));
+    textures[0] = loadTexture(shader, "images/chess-pawn-white.png", "textureWhitePawn", 0);
+    textures[1] = loadTexture(shader, "images/chess-rook-white.png", "textureWhiteRook", 1);
+    textures[2] = loadTexture(shader, "images/chess-knight-white.png", "textureWhiteKnight", 2);
+    textures[3] = loadTexture(shader, "images/chess-bishop-white.png", "textureWhiteBishop", 3);
+    textures[4] = loadTexture(shader, "images/chess-queen-white.png", "textureWhiteQueen", 4);
+    textures[5] = loadTexture(shader, "images/chess-king-white.png", "textureWhiteKing", 5);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture2);
+    textures[6] = loadTexture(shader, "images/chess-pawn-black.png", "textureBlackPawn", 6);
+    textures[7] = loadTexture(shader, "images/chess-rook-black.png", "textureBlackRook", 7);
+    textures[8] = loadTexture(shader, "images/chess-knight-black.png", "textureBlackKnight", 8);
+    textures[9] = loadTexture(shader, "images/chess-bishop-black.png", "textureBlackBishop", 9);
+    textures[10] = loadTexture(shader, "images/chess-queen-black.png", "textureBlackQueen", 10);
+    textures[11] = loadTexture(shader, "images/chess-king-black.png", "textureBlackKing", 11);
+
+    for (int i = 0; i<12;i++)
+    {
+        glActiveTexture(GL_TEXTURE0+i);
+        glBindTexture(GL_TEXTURE_2D, textures[i]);
+    }
 }
 
-unsigned int loadTexture(Shader **shader, GLenum activateTexture, const char* path, const char* uniformName, int uniformVal)
+unsigned int loadTexture(Shader **shader, const char* path, const char* uniformName, int uniformVal)
 {
     //Generating the gl texture id
     unsigned int texture;

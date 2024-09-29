@@ -2,15 +2,15 @@
 #include <stdio.h>
 #include "chessPieces.h"
 
-extern unsigned int **board;
+extern int **board;
 extern unsigned int screenWidth;
 extern unsigned int screenHeight;
 
 /*
-Create the 4 vertices per chess piece, each vertex has 5 attributes hence 4*5*pieces attributes
+Create the 4 vertices per chess piece, each vertex has 6 attributes hence 4*6*pieces attributes
 Chesspiece vertices are generated around the piece in the order: topleft, topright, bottomright, bottomleft
 */
-float* createPieceVertices(unsigned int **chessPieces)
+float* createPieceVertices(int **chessPieces)
 {   
     float *pieceVertices = (float*)calloc(PIECE_VERTICES_NUMBER, sizeof(float));
 
@@ -56,10 +56,10 @@ float* createPieceVertices(unsigned int **chessPieces)
         }
     }
 
-    /* for (int i =0; i<4*6*2; i+=6)
+    /* for (int i =0; i<4*6*12; i+=6)
     {
-        printf("%f %f %f %f %f %f\n", pieceVertices[i], pieceVertices[i+1], pieceVertices[i+2], pieceVertices[i+3], pieceVertices[i+4], pieceVertices[i+5]);
-    } */
+        printf("%f %f %f %f %f %f\n\n", pieceVertices[i], pieceVertices[i+1], pieceVertices[i+2], pieceVertices[i+3], pieceVertices[i+4], pieceVertices[i+5]);
+    }  */
 
     return pieceVertices;
 }
@@ -67,18 +67,20 @@ float* createPieceVertices(unsigned int **chessPieces)
 
 /*
 Create the indices for the pieces
-To create the indices we also use chesspiece location:
-    The column coordinate means an offset of a multiple of 4
-    THe row    coordinate means an offset of a multiple of 32
+To create the indices we use chesspiece order:
+    Everything textures is sorted at the vertex level
+    Vertices are set at chesspiece location but that does mean that there is no pattern but instead there is an order
+    Top most left most are created first and as the loops travel right then down the pieces are added
+    If we follow that iteration we will obviously encounter the same pattern
 
+    So generating correct indices is as simple as multiplying the location of the piece in that order by 4
     Then add a value 0,1,2 or 3 to match which corner we want
 */
-unsigned int* createPieceIndices(unsigned int **chessPieces)
+unsigned int* createPieceIndices(int **chessPieces)
 {
     unsigned int *pieceIndices = (unsigned int*)calloc(PIECE_INDICES_NUMBER, sizeof(unsigned int));
-    unsigned int indicesIndex = 0;
+    unsigned int indicesIndex = 0, pieceCounter = 0;
 
-    /*
     for (int i = 0; i<8;i++)
     {
         for (int j = 0; j<8; j++)
@@ -86,32 +88,19 @@ unsigned int* createPieceIndices(unsigned int **chessPieces)
             if (chessPieces[i][j])
             {
                 //Top right triangle
-                pieceIndices[indicesIndex++] = (32 * i) + (4 * j);
-                pieceIndices[indicesIndex++] = (32 * i) + (4 * j) + 1;
-                pieceIndices[indicesIndex++] = (32 * i) + (4 * j) + 2;
+                pieceIndices[indicesIndex++] = (pieceCounter*4);
+                pieceIndices[indicesIndex++] = (pieceCounter*4)+1;
+                pieceIndices[indicesIndex++] = (pieceCounter*4)+2;
 
                 //Bottom left triangle
-                pieceIndices[indicesIndex++] = (32 * i) + (4 * j);
-                pieceIndices[indicesIndex++] = (32 * i) + (4 * j) + 2;
-                pieceIndices[indicesIndex++] = (32 * i) + (4 * j) + 3;
+                pieceIndices[indicesIndex++] = (pieceCounter*4);
+                pieceIndices[indicesIndex++] = (pieceCounter*4)+2;
+                pieceIndices[indicesIndex++] = (pieceCounter*4)+3;
+
+                pieceCounter++;
             }
         }
     }
-    */
-
-    pieceIndices[0] = 0;
-    pieceIndices[1] = 1;
-    pieceIndices[2] = 2;
-    pieceIndices[3] = 0;
-    pieceIndices[4] = 2;
-    pieceIndices[5] = 3;
-
-    pieceIndices[6] = 4;
-    pieceIndices[7] = 5;
-    pieceIndices[8] = 6;
-    pieceIndices[9] = 4;
-    pieceIndices[10] = 6;
-    pieceIndices[11] = 7;
 
     if (indicesIndex > PIECE_INDICES_NUMBER)
     {

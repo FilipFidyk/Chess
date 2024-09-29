@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "board.h"
 
 /*
 This function creates a lattice of vertices that forms 9 vertical and 9 horizontal lines.
@@ -63,17 +64,29 @@ unsigned int* createBoardIndices()
 }
 
 //Creates the 2d array in the heap and ----TODO---- inserts all the pieces into it
-unsigned int** initChessBoard()
+int** initChessBoard()
 {
-    unsigned int **chessPieces;
-    chessPieces = (unsigned int**)calloc(8, sizeof(unsigned int*));
+    int **chessPieces;
+    chessPieces = (int**)calloc(8, sizeof(int*));
     for (int i = 0; i < 8; i++)
     {
-        chessPieces[i] = (unsigned int*)calloc(8, sizeof(unsigned int));
+        chessPieces[i] = (int*)calloc(8, sizeof(int));
     }
 
-    chessPieces[0][0] = 1;
-    chessPieces[0][1] = 2;
+    chessPieces[0][0] = WHITE_PAWN;
+    chessPieces[0][1] = WHITE_ROOK;
+    chessPieces[0][2] = WHITE_KNIGHT;
+    chessPieces[0][3] = WHITE_BISHOP;
+    chessPieces[0][4] = WHITE_QUEEN;
+    chessPieces[0][5] = WHITE_KING;
+
+    chessPieces[7][0] = BLACK_PAWN;
+    chessPieces[7][1] = BLACK_ROOK;
+    chessPieces[7][2] = BLACK_KNIGHT;
+    chessPieces[7][3] = BLACK_BISHOP;
+    chessPieces[7][4] = BLACK_QUEEN;
+    chessPieces[7][5] = BLACK_KING;
+
 
     return chessPieces;
 }

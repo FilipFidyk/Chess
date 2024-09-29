@@ -4,17 +4,68 @@ out vec4 FragColor;
 in float textureSelect;
 in vec2 texCoord;
 
-uniform sampler2D texture1;
-uniform sampler2D texture2;
+uniform sampler2D textureWhitePawn;
+uniform sampler2D textureWhiteRook;
+uniform sampler2D textureWhiteKnight;
+uniform sampler2D textureWhiteBishop;
+uniform sampler2D textureWhiteQueen;
+uniform sampler2D textureWhiteKing;
+
+uniform sampler2D textureBlackPawn;
+uniform sampler2D textureBlackRook;
+uniform sampler2D textureBlackKnight;
+uniform sampler2D textureBlackBishop;
+uniform sampler2D textureBlackQueen;
+uniform sampler2D textureBlackKing;
 
 void main()
 {
     if (textureSelect == 1.0)
     {
-        FragColor = texture(texture1, texCoord);
+        FragColor = texture(textureWhitePawn, texCoord);
     }
     else if (textureSelect == 2.0)
     {
-        FragColor = texture(texture2, texCoord);
+        FragColor = texture(textureWhiteRook, texCoord);
+    }
+    else if (textureSelect == 3.0)
+    {
+        FragColor = texture(textureWhiteKnight, texCoord);
+    }
+    else if (textureSelect == 4.0)
+    {
+        FragColor = texture(textureWhiteBishop, texCoord);
+    }
+    else if (textureSelect == 5.0)
+    {
+        FragColor = texture(textureWhiteQueen, texCoord);
+    }
+    else if (textureSelect == 6.0)
+    {
+        FragColor = texture(textureWhiteKing, texCoord);
+    }
+    else if (textureSelect == -1.0)
+    {
+        FragColor = texture(textureBlackPawn, texCoord);
+    }
+    else if (textureSelect == -2.0)
+    {
+        FragColor = texture(textureBlackRook, texCoord);
+    }
+    else if (textureSelect == -3.0)
+    {
+        FragColor = texture(textureBlackKnight, texCoord);
+    }
+    else if (textureSelect == -4.0)
+    {
+        FragColor = texture(textureBlackBishop, texCoord);
+    }
+    else if (textureSelect == -5.0)
+    {
+        FragColor = texture(textureBlackQueen, texCoord);
+    }
+    else if (textureSelect == -6.0)
+    {
+        FragColor = texture(textureBlackKing, texCoord);
     }
 };
