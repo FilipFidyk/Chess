@@ -39,7 +39,7 @@ int main()
     float *vertices = createBoardVertices();
     unsigned int *indices = createBoardIndices();
     unsigned int boardVAO, boardVBO, boardEBO;
-    genVAO(&boardVAO, &boardVBO, &boardEBO, vertices, 3*81*sizeof(float), indices, 3*64*sizeof(unsigned int), 0, 3);
+    genVAO(&boardVAO, &boardVBO, &boardEBO, vertices, BOARD_VERTICES_NUMBER*sizeof(float), indices, BOARD_INDICES_NUMBER*sizeof(unsigned int), 0, 4);
     free(vertices);
     free(indices);
 
@@ -76,7 +76,7 @@ int main()
 
         glUseProgram(shaderBoard->ID);
         glBindVertexArray(boardVAO);
-        glDrawElements(GL_TRIANGLES, 3*64, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, BOARD_INDICES_NUMBER, GL_UNSIGNED_INT, 0);
 
 
         glUseProgram(shaderPieces->ID);
@@ -193,7 +193,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 //Very basic setup of VAOs, VBOs and EBOs, all data is passed in
-void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int texturesVAO, unsigned int strideSize)
+void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int modVAO, unsigned int strideSize)
 {
     glGenVertexArrays(1, VAO);
     glGenBuffers(1, VBO);
@@ -210,7 +210,12 @@ void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vert
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, strideSize * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    if (texturesVAO)
+    if (modVAO == 0)
+    {
+        glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, strideSize * sizeof(float), (void*)(3*sizeof(float)));
+        glEnableVertexAttribArray(1);
+    }
+    else if (modVAO == 1)
     {
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, strideSize * sizeof(float), (void*)(3*sizeof(float)));
         glEnableVertexAttribArray(1);

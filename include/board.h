@@ -1,6 +1,9 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#define BOARD_VERTICES_NUMBER 4*4*64
+#define BOARD_INDICES_NUMBER 3*2*64
+
 #define WHITE_PAWN 1
 #define WHITE_ROOK 2
 #define WHITE_KNIGHT 3

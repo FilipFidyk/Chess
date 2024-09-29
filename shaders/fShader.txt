@@ -1,6 +1,17 @@
 #version 330 core
+
 out vec4 FragColor;
+
+in float colourSelect;
+
 void main()
 {
-    FragColor = vec4(0.7f, 0.6f, 1.0f, 1.0f);
+    if (colourSelect == 1.0)
+    {
+        FragColor = vec4(0.7, 0.6, 1.0, 1.0);
+    }
+    else if (colourSelect == -1.0)
+    {
+        FragColor = vec4(0.9, 0.9, 0.8, 1.0);
+    }
 };

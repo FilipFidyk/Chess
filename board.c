@@ -9,21 +9,46 @@ They're generated on the horizontal line then the next and so on
 */
 float* createBoardVertices()
 {
-    float *vertices = (float*)calloc(3*81, sizeof(float));
-    int vertexIndex = 0;
+    float *vertices = (float*)calloc(BOARD_VERTICES_NUMBER, sizeof(float));
+    int vertexIndex = 0, colourSelectFlag = 1;
     
     //OpenGL screen does coordinates from -1.0,-1.0 (topleft) to 1.0,1.0 (bottom right)
     //So the coordinates are set at those limits and 0.25 intervals
-    for (int y = 0; y < 9; y++) {
-        for (int x = 0; x < 9; x++) {
-            vertices[vertexIndex++] = -1.0f + (x * 0.25f); // X position
-            vertices[vertexIndex++] = 1.0f - (y * 0.25f); // Y position
-            vertices[vertexIndex++] = 1.0f; // Z position
+    for (int y = 0; y < 8; y++) {
+        colourSelectFlag *= -1;
+        for (int x = 0; x < 8; x++) {
+
+            //top left
+            vertices[vertexIndex++] = -1.0f + (x * 0.25f);      // X position
+            vertices[vertexIndex++] = 1.0f - (y * 0.25f);       // Y position
+            vertices[vertexIndex++] = 1.0f;                     // Z position
+            vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+
+            //top right
+            vertices[vertexIndex++] = -1.0f + ((x+1) * 0.25f);  // X position
+            vertices[vertexIndex++] = 1.0f - (y * 0.25f);       // Y position
+            vertices[vertexIndex++] = 1.0f;                     // Z position
+            vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+
+            //bottom right
+            vertices[vertexIndex++] = -1.0f + ((x+1) * 0.25f);  // X position
+            vertices[vertexIndex++] = 1.0f - ((y+1) * 0.25f);   // Y position
+            vertices[vertexIndex++] = 1.0f;                     // Z position
+            vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+
+            //bottom left
+            vertices[vertexIndex++] = -1.0f + (x * 0.25f);      // X position
+            vertices[vertexIndex++] = 1.0f - ((y+1) * 0.25f);   // Y position
+            vertices[vertexIndex++] = 1.0f;                     // Z position
+            vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+
+            colourSelectFlag *= -1;
         }
+        
     }
 
     //Quick check we didn't overfill the array, when vertexIndex is 3*81 it means the last modified index was (3*81)-1
-    if (vertexIndex > 3*81)
+    if (vertexIndex > BOARD_VERTICES_NUMBER)
     {
         printf("ERROR::BOARD VERTICES BUFFER OVERFLOW");
     }
@@ -40,27 +65,25 @@ Forms the topright triangle then the bottom left and skips to the next square wh
 unsigned int* createBoardIndices()
 {
     //8 triangles per row, 8 columns so 64 triangles, each made of 3 vertices, hence 3*64 entries
-    unsigned int *indices = (unsigned int*)calloc(3*64, sizeof(unsigned int));
+    unsigned int *boardIndices = (unsigned int*)calloc(BOARD_INDICES_NUMBER, sizeof(unsigned int));
+    unsigned int vertexOffset=0;
 
-    int trianglesFirstVertexIndex = 1;
-    for (int i = 0; i < 3*64; i += 6)
+    for (int i = 0; i < BOARD_INDICES_NUMBER; i += 6)
     {
-        if (trianglesFirstVertexIndex == 17 || trianglesFirstVertexIndex == 35 || trianglesFirstVertexIndex == 53)
-        {
-            trianglesFirstVertexIndex += 2;
-        }
-        indices[i] = trianglesFirstVertexIndex;
-        indices[i+1] = trianglesFirstVertexIndex + 1;
-        indices[i+2] = trianglesFirstVertexIndex + 10;
-        indices[i+3] = trianglesFirstVertexIndex;
-        indices[i+4] = trianglesFirstVertexIndex + 9;
-        indices[i+5] = trianglesFirstVertexIndex + 10;
-        trianglesFirstVertexIndex += 2;
+            //Top right triangle
+            boardIndices[i] = vertexOffset;
+            boardIndices[i+1] = vertexOffset+1;
+            boardIndices[i+2] = vertexOffset+2;
+
+            //Bottom left triangle
+            boardIndices[i+3] = vertexOffset;
+            boardIndices[i+4] = vertexOffset+2;
+            boardIndices[i+5] = vertexOffset+3;
+            vertexOffset+=4;
     }
-
-    //No need to check as the loop stops when i becomes 3*64, meaning the last changed index was the one before
-
-    return indices;
+    
+    //No need to check i as it finished at BOARD_INDICES_NUMBER so the last assignments are in range 
+    return boardIndices;
 }
 
 //Creates the 2d array in the heap and ----TODO---- inserts all the pieces into it
