@@ -143,7 +143,7 @@ int** initChessBoard()
         chessPieces[i] = (int*)calloc(8, sizeof(int));
     }
 
-    chessPieces[6][0] = WHITE_PAWN;
+    chessPieces[5][0] = WHITE_PAWN;
     chessPieces[7][1] = WHITE_ROOK;
     chessPieces[7][2] = WHITE_KNIGHT;
     chessPieces[7][3] = WHITE_BISHOP;

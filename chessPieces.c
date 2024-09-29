@@ -172,14 +172,46 @@ void FindPiece(int **board, int* coordDest, double xpos, double ypos)
 
 //Checks if where the user clicked for the second time isn't the same as the first
 //If so then nothing happens, if not then we move the piece in the 2D array
-void MovePiece(int **board, double nxpos, double nypos, int xCoord, int yCoord)
+int MovePiece(int **board, double nxpos, double nypos, int xCoord, int yCoord)
 {
     unsigned int nxCoord = pixelToCoord(nxpos), nyCoord = pixelToCoord(nypos);
     
     if (xCoord != nxCoord || yCoord != nyCoord)
     {
-        board[nyCoord][nxCoord] = board[yCoord][xCoord];
-        board[yCoord][xCoord] = 0;
+        if (board[nyCoord][nxCoord] >= 10 || board[nyCoord][nxCoord] < -10)
+        {
+            board[nyCoord][nxCoord] = board[yCoord][xCoord];
+            board[yCoord][xCoord] = 0;
+            cleanUpBoard(board);
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        cleanUpBoard(board);
+        return 1;
+    }
+}
+
+void cleanUpBoard(int **board)
+{
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            if (board[i][j] >= 10)
+            {
+                board[i][j] -= 10;
+            }
+            else if(board[i][j] < -10)
+            {
+                board[i][j] += 10;
+            }
+        }
     }
 }
 

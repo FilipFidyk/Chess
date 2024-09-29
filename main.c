@@ -163,20 +163,19 @@ void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceV
                 {
                     firstClick = 0;
                 }
-                for (int i =0; i<8; i++)
-                {
-                    printf("%d %d %d %d %d %d %d %d\n", board[i][0], board[i][1], board[i][2], board[i][3], board[i][4], board[i][5], board[i][6], board[i][6]);
-                } 
                 subVAO(boardVAO, boardVBO, boardEBO, createBoardVertices(board), BOARD_VERTICES_NUMBER*sizeof(float), createBoardIndices(board), BOARD_INDICES_NUMBER*sizeof(unsigned int));
             }
             else
             {
                 //When the flag is a 0 we move the piece to where the user click --TODO-- this is where take rules inhabit
-                MovePiece(board, xpos, ypos, firstClickCoords[0], firstClickCoords[1]);
-                firstClick = 1;
-
-                //This then requires modifying the buffers of the pieceVAO so that a correct state of the board can be rendered
-                subVAO(pieceVAO, pieceVBO, pieceEBO, createPieceVertices(board), PIECE_VERTICES_NUMBER*sizeof(float), createPieceIndices(board), PIECE_INDICES_NUMBER*sizeof(unsigned int));
+                if (MovePiece(board, xpos, ypos, firstClickCoords[0], firstClickCoords[1]))
+                {
+                    //This then requires modifying the buffers of the pieceVAO so that a correct state of the board can be rendered
+                    subVAO(boardVAO, boardVBO, boardEBO, createBoardVertices(board), BOARD_VERTICES_NUMBER*sizeof(float), createBoardIndices(board), BOARD_INDICES_NUMBER*sizeof(unsigned int));
+                    subVAO(pieceVAO, pieceVBO, pieceEBO, createPieceVertices(board), PIECE_VERTICES_NUMBER*sizeof(float), createPieceIndices(board), PIECE_INDICES_NUMBER*sizeof(unsigned int));
+                    firstClick = 1;
+                }
+                
             }
         }
     }
