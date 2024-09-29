@@ -10,10 +10,10 @@
 #include "textures.h"
 
 GLFWwindow* initGLFW();
-void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceVBO, unsigned int pieceEBO, unsigned int boardVAO, unsigned int boardVBO, unsigned int boardEBO);
+void processInput(GLFWwindow *window, unsigned int *pieceVAO, unsigned int *pieceVBO, unsigned int *pieceEBO, unsigned int *boardVAO, unsigned int *boardVBO, unsigned int *boardEBO);
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int texturesVAO, unsigned int strideSize);
-void subVAO(unsigned int VAO, unsigned int VBO, unsigned int EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize);
+void subVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize);
 
 unsigned int screenWidth = 800;
 unsigned int screenHeight = 800;
@@ -21,6 +21,7 @@ unsigned int screenHeight = 800;
 int **board;
 int previousMouseState = GLFW_RELEASE;
 int *firstClickCoords;
+unsigned int takeNumber = 0;
 
 int main()
 {
@@ -68,7 +69,7 @@ int main()
     //Polling loop to keep the window running
     while(!glfwWindowShouldClose(window))
     {
-        processInput(window, pieceVAO, pieceVBO, pieceEBO, boardVAO, boardVBO, boardEBO);
+        processInput(window, &pieceVAO, &pieceVBO, &pieceEBO, &boardVAO, &boardVBO, &boardEBO);
         
         glClearColor(0.9f, 0.9f, 0.8f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -141,7 +142,7 @@ GLFWwindow* initGLFW()
 unsigned int firstClick = 1;
 
 //The function that allows for moving pieces around the board
-void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceVBO, unsigned int pieceEBO, unsigned int boardVAO, unsigned int boardVBO, unsigned int boardEBO)
+void processInput(GLFWwindow *window, unsigned int *pieceVAO, unsigned int *pieceVBO, unsigned int *pieceEBO, unsigned int *boardVAO, unsigned int *boardVBO, unsigned int *boardEBO)
 {
     //input debouncing so that a mouse input isn't processed multiple times
     int currentMouseState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
@@ -167,15 +168,27 @@ void processInput(GLFWwindow *window, unsigned int pieceVAO, unsigned int pieceV
             }
             else
             {
+                int typeOfMove = MovePiece(board, xpos, ypos, firstClickCoords[0], firstClickCoords[1]);
                 //When the flag is a 0 we move the piece to where the user click --TODO-- this is where take rules inhabit
-                if (MovePiece(board, xpos, ypos, firstClickCoords[0], firstClickCoords[1]))
+                if (typeOfMove == 1)
                 {
                     //This then requires modifying the buffers of the pieceVAO so that a correct state of the board can be rendered
-                    subVAO(boardVAO, boardVBO, boardEBO, createBoardVertices(board), BOARD_VERTICES_NUMBER*sizeof(float), createBoardIndices(board), BOARD_INDICES_NUMBER*sizeof(unsigned int));
-                    subVAO(pieceVAO, pieceVBO, pieceEBO, createPieceVertices(board), PIECE_VERTICES_NUMBER*sizeof(float), createPieceIndices(board), PIECE_INDICES_NUMBER*sizeof(unsigned int));
+                    subVAO(boardVAO, boardVBO, boardEBO, createBoardVertices(board), BOARD_VERTICES_NUMBER*sizeof(float) , createBoardIndices(board), BOARD_INDICES_NUMBER*sizeof(unsigned int));
+                    subVAO(pieceVAO, pieceVBO, pieceEBO, createPieceVertices(board), PIECE_VERTICES_NUMBER*sizeof(float)-takeNumber*24,
+                                                         createPieceIndices(board),  PIECE_INDICES_NUMBER*sizeof(unsigned int)-takeNumber*6);
                     firstClick = 1;
                 }
-                
+                else if (typeOfMove == 2)
+                {
+                    takeNumber++;
+                    glDeleteVertexArrays(1, pieceVAO);
+                    glDeleteBuffers(1,  pieceVBO);
+                    glDeleteBuffers(1, pieceEBO);
+                    genVAO(pieceVAO, pieceVBO, pieceEBO, createPieceVertices(board), PIECE_VERTICES_NUMBER*sizeof(float)-takeNumber*24,
+                                                         createPieceIndices(board),  PIECE_INDICES_NUMBER*sizeof(unsigned int) - takeNumber*6, 1, 6);
+                    subVAO(boardVAO, boardVBO, boardEBO, createBoardVertices(board), BOARD_VERTICES_NUMBER*sizeof(float) , createBoardIndices(board), BOARD_INDICES_NUMBER*sizeof(unsigned int));
+                    firstClick = 1;
+                }
             }
         }
     }
@@ -224,14 +237,14 @@ void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vert
     glBindVertexArray(0);
 }
 
-void subVAO(unsigned int VAO, unsigned int VBO, unsigned int EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize)
+void subVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize)
 {
-    glBindVertexArray(VAO);
+    glBindVertexArray(*VAO);
                 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, *VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, verticesSize, vertices);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indicesSize, indices);
 
     glBindVertexArray(0);

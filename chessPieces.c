@@ -7,6 +7,7 @@
 //extern int **board;
 extern unsigned int screenWidth;
 extern unsigned int screenHeight;
+extern unsigned int takeNumber;
 
 /*
 Create the 4 vertices per chess piece, each vertex has 6 attributes hence 4*6*pieces attributes
@@ -14,18 +15,19 @@ Chesspiece vertices are generated around the piece in the order: topleft, toprig
 */
 float* createPieceVertices(int **board)
 {   
-    float *pieceVertices = (float*)calloc(PIECE_VERTICES_NUMBER, sizeof(float));
+    float *pieceVertices = (float*)calloc(PIECE_VERTICES_NUMBER-(24*takeNumber), sizeof(float));
 
     unsigned int vertexAttribute = 0;
-    for (int i = 0; i<8;i++)
+    for (int i = 2; i<10;i++)
     {
-        for (int j = 0; j<8; j++)
+        for (int j = 2; j<10; j++)
         {
+            int nj = j-2, ni = i-2;
             if (board[i][j])
             {
                 //top left vertex
-                pieceVertices[vertexAttribute++] = -1.0f + (j *  0.25f);
-                pieceVertices[vertexAttribute++] =  1.0f + (i * -0.25f);
+                pieceVertices[vertexAttribute++] = -1.0f + (nj *  0.25f);
+                pieceVertices[vertexAttribute++] =  1.0f + (ni * -0.25f);
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
@@ -43,8 +45,8 @@ float* createPieceVertices(int **board)
                 }
 
                 //top right vertex
-                pieceVertices[vertexAttribute++] = -1.0f + ((j+1) *  0.25f);
-                pieceVertices[vertexAttribute++] =  1.0f + (i * -0.25f);
+                pieceVertices[vertexAttribute++] = -1.0f + ((nj+1) *  0.25f);
+                pieceVertices[vertexAttribute++] =  1.0f + (ni * -0.25f);
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
@@ -62,8 +64,8 @@ float* createPieceVertices(int **board)
                 }
 
                 //bottom right vertex
-                pieceVertices[vertexAttribute++] = -1.0f + ((j+1) *  0.25f);
-                pieceVertices[vertexAttribute++] =  1.0f + ((i+1) * -0.25f);
+                pieceVertices[vertexAttribute++] = -1.0f + ((nj+1) *  0.25f);
+                pieceVertices[vertexAttribute++] =  1.0f + ((ni+1) * -0.25f);
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 1.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
@@ -81,8 +83,8 @@ float* createPieceVertices(int **board)
                 }
 
                 //bottom left vertex
-                pieceVertices[vertexAttribute++] = -1.0f + (j *  0.25f);
-                pieceVertices[vertexAttribute++] =  1.0f + ((i+1) * -0.25f);
+                pieceVertices[vertexAttribute++] = -1.0f + (nj *  0.25f);
+                pieceVertices[vertexAttribute++] =  1.0f + ((ni+1) * -0.25f);
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
                 pieceVertices[vertexAttribute++] = 0.0f;
@@ -119,12 +121,13 @@ To create the indices we use chesspiece order:
 */
 unsigned int* createPieceIndices(int **chessPieces)
 {
-    unsigned int *pieceIndices = (unsigned int*)calloc(PIECE_INDICES_NUMBER, sizeof(unsigned int));
+    unsigned int *pieceIndices = (unsigned int*)calloc(PIECE_INDICES_NUMBER-(6*takeNumber), sizeof(unsigned int));
     unsigned int indicesIndex = 0, pieceCounter = 0;
 
-    for (int i = 0; i<8;i++)
+
+    for (int i = 2; i<10;i++)
     {
-        for (int j = 0; j<8; j++)
+        for (int j = 2; j<10; j++)
         {
             if (chessPieces[i][j])
             {
@@ -155,6 +158,7 @@ unsigned int* createPieceIndices(int **chessPieces)
 void FindPiece(int **board, int* coordDest, double xpos, double ypos)
 {
     unsigned int xCoord = pixelToCoord(xpos), yCoord = pixelToCoord(ypos);
+
     if (board[yCoord][xCoord])
     {
         coordDest[0] = xCoord;
@@ -162,7 +166,9 @@ void FindPiece(int **board, int* coordDest, double xpos, double ypos)
 
         /* Adjust the board to find available places*/
         setAvailableMoves(board, xCoord, yCoord);
-
+        /* for (int i = 0;i<12;i++){
+            printf("%d %d %d %d %d %d %d %d %d %d %d %d\n", board[i][0], board[i][1], board[i][2], board[i][3], board[i][4], board[i][5], board[i][6], board[i][7], board[i][8], board[i][9], board[i][10], board[i][11]);
+        } */
     }
     else{
         coordDest[0] = -1;
@@ -175,15 +181,18 @@ void FindPiece(int **board, int* coordDest, double xpos, double ypos)
 int MovePiece(int **board, double nxpos, double nypos, int xCoord, int yCoord)
 {
     unsigned int nxCoord = pixelToCoord(nxpos), nyCoord = pixelToCoord(nypos);
+    int flag = 0;
     
     if (xCoord != nxCoord || yCoord != nyCoord)
     {
         if (board[nyCoord][nxCoord] >= 10 || board[nyCoord][nxCoord] < -10)
         {
+            flag = board[nyCoord][nxCoord]; 
             board[nyCoord][nxCoord] = board[yCoord][xCoord];
             board[yCoord][xCoord] = 0;
             cleanUpBoard(board);
-            return 1;
+            
+            return (flag == 10) ? 1 : 2;
         }
         else
         {
@@ -199,9 +208,9 @@ int MovePiece(int **board, double nxpos, double nypos, int xCoord, int yCoord)
 
 void cleanUpBoard(int **board)
 {
-    for (int i = 0; i < 8; i++)
+    for (int i = 2; i < 10; i++)
     {
-        for (int j = 0; j < 8; j++)
+        for (int j = 2; j < 10; j++)
         {
             if (board[i][j] >= 10)
             {
@@ -234,9 +243,12 @@ void setAvailableMoves(int **board, unsigned int xCoord, unsigned int yCoord)
             board[yCoord-1][xCoord] = FREE_BOX;
             
             //Check if it is the first move and if the second box is free
-            if (!board[yCoord-2][xCoord] && yCoord == 6)
+            if (yCoord == 6)
             {
-                board[yCoord-2][xCoord] = FREE_BOX;   
+                if (!board[yCoord-2][xCoord])
+                {
+                    board[yCoord-2][xCoord] = FREE_BOX;  
+                } 
             }
         }
 
@@ -265,9 +277,9 @@ void setAvailableMoves(int **board, unsigned int xCoord, unsigned int yCoord)
                 board[yCoord-1][xCoord-1] -= 10;
             }
 
-            if (board[yCoord-1][xCoord-1] < 0)
+            if (board[yCoord-1][xCoord+1] < 0)
             {
-                board[yCoord-1][xCoord-1] -= 10;
+                board[yCoord-1][xCoord+1] -= 10;
             }
         }
         break;
@@ -282,10 +294,10 @@ Exception is if someone clicks perfectly on the edge of the screen we output 7
 */
 unsigned int pixelToCoord(double val)
 {
-    double coord = val / ((double)screenWidth / 8);
-    if (coord >= 8)
+    double coord = (val / ((double)screenWidth / 8)) +2;
+    if (coord >= 10.0)
     {
-        coord = 7;
+        coord = 9.0;
     }
 
     return (unsigned int)coord;
