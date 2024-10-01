@@ -190,6 +190,8 @@ void processInput(GLFWwindow *window, unsigned int *pieceVAO, unsigned int *piec
 
                     subVAO(pieceVAO, pieceVBO, pieceEBO, vertices, PIECE_VERTICES_NUMBER*sizeof(float)-takeNumber*24,
                                                          indices,  PIECE_INDICES_NUMBER*sizeof(unsigned int)-takeNumber*6);
+                    free(vertices);
+                    free(indices);          
                     firstClick = 1;
                 }
                 else if (typeOfMove == 2)
@@ -198,9 +200,20 @@ void processInput(GLFWwindow *window, unsigned int *pieceVAO, unsigned int *piec
                     glDeleteVertexArrays(1, pieceVAO);
                     glDeleteBuffers(1,  pieceVBO);
                     glDeleteBuffers(1, pieceEBO);
-                    genVAO(pieceVAO, pieceVBO, pieceEBO, createPieceVertices(board), PIECE_VERTICES_NUMBER*sizeof(float)-takeNumber*24,
-                                                         createPieceIndices(board),  PIECE_INDICES_NUMBER*sizeof(unsigned int) - takeNumber*6, 1, 6);
-                    subVAO(boardVAO, boardVBO, boardEBO, createBoardVertices(board), BOARD_VERTICES_NUMBER*sizeof(float) , createBoardIndices(board), BOARD_INDICES_NUMBER*sizeof(unsigned int));
+
+                    vertices = createPieceVertices(board);
+                    indices = createPieceIndices(board);
+                    genVAO(pieceVAO, pieceVBO, pieceEBO, vertices, PIECE_VERTICES_NUMBER*sizeof(float)-takeNumber*24,
+                                                         indices,  PIECE_INDICES_NUMBER*sizeof(unsigned int) - takeNumber*6, 1, 6);
+                    free(vertices);
+                    free(indices);
+
+                    vertices = createBoardVertices(board);
+                    indices = createBoardIndices(board);
+                    subVAO(boardVAO, boardVBO, boardEBO, vertices, BOARD_VERTICES_NUMBER*sizeof(float) , indices, BOARD_INDICES_NUMBER*sizeof(unsigned int));
+                    free(vertices);
+                    free(indices);
+                    
                     firstClick = 1;
                 }
             }
