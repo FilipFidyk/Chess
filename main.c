@@ -154,6 +154,8 @@ void processInput(GLFWwindow *window, unsigned int *pieceVAO, unsigned int *piec
             double xpos, ypos;
             glfwGetCursorPos(window, &xpos, &ypos);
             
+            float *vertices;
+            unsigned int *indices;
             //The firstClick global flag the function on whether a piece has been selected or not 
             if (firstClick)
             {
@@ -164,7 +166,11 @@ void processInput(GLFWwindow *window, unsigned int *pieceVAO, unsigned int *piec
                 {
                     firstClick = 0;
                 }
-                subVAO(boardVAO, boardVBO, boardEBO, createBoardVertices(board), BOARD_VERTICES_NUMBER*sizeof(float), createBoardIndices(board), BOARD_INDICES_NUMBER*sizeof(unsigned int));
+                vertices = createBoardVertices(board);
+                indices = createBoardIndices(board);
+                subVAO(boardVAO, boardVBO, boardEBO, vertices, BOARD_VERTICES_NUMBER*sizeof(float), indices, BOARD_INDICES_NUMBER*sizeof(unsigned int));
+                free(vertices);
+                free(indices);
             }
             else
             {
@@ -173,9 +179,17 @@ void processInput(GLFWwindow *window, unsigned int *pieceVAO, unsigned int *piec
                 if (typeOfMove == 1)
                 {
                     //This then requires modifying the buffers of the pieceVAO so that a correct state of the board can be rendered
-                    subVAO(boardVAO, boardVBO, boardEBO, createBoardVertices(board), BOARD_VERTICES_NUMBER*sizeof(float) , createBoardIndices(board), BOARD_INDICES_NUMBER*sizeof(unsigned int));
-                    subVAO(pieceVAO, pieceVBO, pieceEBO, createPieceVertices(board), PIECE_VERTICES_NUMBER*sizeof(float)-takeNumber*24,
-                                                         createPieceIndices(board),  PIECE_INDICES_NUMBER*sizeof(unsigned int)-takeNumber*6);
+                    vertices = createBoardVertices(board);
+                    indices = createBoardIndices(board);
+                    subVAO(boardVAO, boardVBO, boardEBO, vertices, BOARD_VERTICES_NUMBER*sizeof(float) , indices, BOARD_INDICES_NUMBER*sizeof(unsigned int));
+                    free(vertices);
+                    free(indices);
+
+                    vertices = createPieceVertices(board);
+                    indices = createPieceIndices(board);
+
+                    subVAO(pieceVAO, pieceVBO, pieceEBO, vertices, PIECE_VERTICES_NUMBER*sizeof(float)-takeNumber*24,
+                                                         indices,  PIECE_INDICES_NUMBER*sizeof(unsigned int)-takeNumber*6);
                     firstClick = 1;
                 }
                 else if (typeOfMove == 2)
