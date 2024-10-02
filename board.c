@@ -1,30 +1,39 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
 #include "board.h"
 
 /*
-This function creates a corner vertices for square on the checkered board.
-Each vertex has 3 coordinates and 1 colour attribute so the total num is 4*4*64
-They're generated from top-left to bottom-right
+    This function creates corner vertices for the squares on the checkered board.
+    Each vertex has 3 coordinates and 1 colour attribute so the total num is 4*4*64
+    They're generated from top-left to bottom-right
+
+    OpenGL screen does coordinates from (-1.0,-1.0) (topleft) to (1.0,1.0) (bottom right)
+    so the coordinates are set at those limits and then offset by a multiple of 0.25
+    
+    Also a colour id is set depending on value in the board
+    0 - The colour will be set to either cream (-1) or lilac (1) decided by a flag that flips between 1 and -1
 */
 float* createBoardVertices(int **board)
 {
     float *vertices = (float*)calloc(BOARD_VERTICES_NUMBER, sizeof(float));
     int vertexIndex = 0, colourSelectFlag = 1;
     
-    //OpenGL screen does coordinates from -1.0,-1.0 (topleft) to 1.0,1.0 (bottom right)
-    //So the coordinates are set at those limits and then offset by a multiple of 0.25
-    for (int i = 2; i < 10; i++) {
-        //The initialise colour is set in the shader but to choose the right one we have a flag that flips polarity
+    for (int i = 2; i < 10; i++)
+    {
+        //The colour flag is flipped at the start of every iteration of both loops, double flip at the end of a row
         colourSelectFlag *= -1;
-        for (int j = 2; j < 10; j++) {
+        for (int j = 2; j < 10; j++) 
+        {    
+            //Necessary offset as originally coords were multiplies but now coordinates of pieces are from (2,2) to (9,9)
+            //instead of (0,0) to (7,7)
             int nj = j-2, ni = i-2;
+            
+            //---------------------------------------------------------------------------------------------------
             //top left
             vertices[vertexIndex++] = -1.0f + (nj * 0.25f);      // X position
             vertices[vertexIndex++] = 1.0f - (ni * 0.25f);       // Y position
-            vertices[vertexIndex++] = 1.0f;                     // Z position
-            if(board[i][j] == 10)
+            vertices[vertexIndex++] = 1.0f;                      // Z position
+            if(board[i][j] == 10)                                //Colour Selector
             {
                 vertices[vertexIndex++] = 2.0f;
             }
@@ -34,14 +43,15 @@ float* createBoardVertices(int **board)
             }
             else 
             {
-                vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+                vertices[vertexIndex++] = colourSelectFlag;
             }
 
+            //---------------------------------------------------------------------------------------------------
             //top right
             vertices[vertexIndex++] = -1.0f + ((nj+1) * 0.25f);  // X position
             vertices[vertexIndex++] = 1.0f - (ni * 0.25f);       // Y position
-            vertices[vertexIndex++] = 1.0f;                     // Z position
-            if(board[i][j] == 10)
+            vertices[vertexIndex++] = 1.0f;                      // Z position
+            if(board[i][j] == 10)                                //Colour Selector
             {
                 vertices[vertexIndex++] = 2.0f;
             }
@@ -51,14 +61,15 @@ float* createBoardVertices(int **board)
             }
             else 
             {
-                vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+                vertices[vertexIndex++] = colourSelectFlag;
             }
 
+            //---------------------------------------------------------------------------------------------------
             //bottom right
             vertices[vertexIndex++] = -1.0f + ((nj+1) * 0.25f);  // X position
             vertices[vertexIndex++] = 1.0f - ((ni+1) * 0.25f);   // Y position
-            vertices[vertexIndex++] = 1.0f;                     // Z position
-            if(board[i][j] == 10)
+            vertices[vertexIndex++] = 1.0f;                      // Z position
+            if(board[i][j] == 10)                                //Colour Selector
             {
                 vertices[vertexIndex++] = 2.0f;
             }
@@ -68,14 +79,15 @@ float* createBoardVertices(int **board)
             }
             else 
             {
-                vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+                vertices[vertexIndex++] = colourSelectFlag;
             }
 
+            //---------------------------------------------------------------------------------------------------
             //bottom left
             vertices[vertexIndex++] = -1.0f + (nj * 0.25f);      // X position
             vertices[vertexIndex++] = 1.0f - ((ni+1) * 0.25f);   // Y position
-            vertices[vertexIndex++] = 1.0f;                     // Z position
-            if(board[i][j] == 10)
+            vertices[vertexIndex++] = 1.0f;                      // Z position
+            if(board[i][j] == 10)                                //Colour Selector
             {
                 vertices[vertexIndex++] = 2.0f;
             }
@@ -85,7 +97,7 @@ float* createBoardVertices(int **board)
             }
             else 
             {
-                vertices[vertexIndex++] = colourSelectFlag;         // Colour Selector
+                vertices[vertexIndex++] = colourSelectFlag;
             }
 
             colourSelectFlag *= -1;
@@ -103,18 +115,16 @@ float* createBoardVertices(int **board)
 }
 
 /*
-Creates the indices that will be used to draw the coloured triangles that form squares on the board
-Forms the topright triangle then the bottom left and skips to the next square which should be 2 vertices away
-    Exceptions are vertices 17, 35 and 53 - row ends without a coloured square and the next one doesn't
-    start with one
+    Creates the indices that will be used to draw the coloured triangles that form squares on the board
+    Vertices are generated around a square 4*(squareNumber - 1) + 0 or 1 or 2 or 3 
+    Always the same number of indices necessary and the vertices are in the same places we don't need any variation
 */
 unsigned int* createBoardIndices()
 {
-    //64 squares, 2 triangles each and 3 indices each, hence 2*3*64 entries
     unsigned int *boardIndices = (unsigned int*)calloc(BOARD_INDICES_NUMBER, sizeof(unsigned int));
     unsigned int vertexOffset=0;
 
-    //Generated for every box, so an offset of a multiple of 4
+    //Generated for every box, so a vertex offset of a multiple of 4
     for (int i = 0; i < BOARD_INDICES_NUMBER; i += 6)
     {
             //Top right triangle

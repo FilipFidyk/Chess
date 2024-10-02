@@ -15,12 +15,23 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int texturesVAO, unsigned int strideSize);
 void subVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize);
 
+/*
+Global variables include:
+ - Screen Width in pixels
+ - Screen Width in pixels
+ - The Chess board representation in the heap
+ - The previous state of the mouse for input debouncing
+ - A reference to which board coords the mouse clicked on to select a piece
+ - A flag to indicate whether it is the mouse first click or second click when playing
+ - The number of takes that have taken place in the game
+*/
+
 unsigned int screenWidth = 800;
 unsigned int screenHeight = 800;
-
 int **board;
 int previousMouseState = GLFW_RELEASE;
 int *firstClickCoords;
+unsigned int firstClick = 1;
 unsigned int takeNumber = 0;
 
 int main()
@@ -40,26 +51,26 @@ int main()
 
     board = initChessBoard();
 
+    //create the vertices and indices of the checkered pattern of the board and load them in 
     float *vertices = createBoardVertices(board);
     unsigned int *indices = createBoardIndices();
     unsigned int boardVAO, boardVBO, boardEBO;
     genVAO(&boardVAO, &boardVBO, &boardEBO, vertices, BOARD_VERTICES_NUMBER*sizeof(float), indices, BOARD_INDICES_NUMBER*sizeof(unsigned int), 0, 4);
-    free(vertices);
-    free(indices);
 
     Shader *shaderPieces;
     Shader_init(&shaderPieces, "shaders/vPieceShader.txt", "shaders/fPieceShader.txt");
 
+    //create the vertices and indices of the pieces and load them in 
     vertices = createPieceVertices(board);
     indices = createPieceIndices(board);
     unsigned int pieceVAO, pieceVBO, pieceEBO;
     genVAO(&pieceVAO, &pieceVBO, &pieceEBO, vertices, PIECE_VERTICES_NUMBER*sizeof(float), indices, PIECE_INDICES_NUMBER*sizeof(unsigned int), 1, 6);
-    free(vertices);
-    free(indices);
-    glUseProgram(shaderPieces->ID);
     
     //---------------------------------------------------------------------------------
     //Load all textures
+
+    //Don't forget to activate the shader before changing its uniforms
+    glUseProgram(shaderPieces->ID);
     loadAllTextures(&shaderPieces);
 
     //---------------------------------------------------------------------------------
@@ -101,6 +112,7 @@ int main()
     glfwTerminate(); 
     return 0;
 }
+
 GLFWwindow* initGLFW()
 {
     //instantiating the glfw window
@@ -139,8 +151,6 @@ GLFWwindow* initGLFW()
     return window;
 }
 
-unsigned int firstClick = 1;
-
 //The function that allows for moving pieces around the board
 void processInput(GLFWwindow *window, unsigned int *pieceVAO, unsigned int *pieceVBO, unsigned int *pieceEBO, unsigned int *boardVAO, unsigned int *boardVBO, unsigned int *boardEBO)
 {
@@ -160,62 +170,61 @@ void processInput(GLFWwindow *window, unsigned int *pieceVAO, unsigned int *piec
             if (firstClick)
             {
                 //FindPiece finds the coordinates of where the user clicks and if a piece exists there
-                //it flips the flag
+                //Also changes the board with legal moves and takes that need to be rendered
                 FindPiece(board, firstClickCoords, xpos, ypos);
                 if (firstClickCoords[0] != -1)
                 {
-                    firstClick = 0;
+                    firstClick = 0;     //Flip the flag
                 }
+
+                //New vertices and indices need to be loaded into the correct buffers
                 vertices = createBoardVertices(board);
                 indices = createBoardIndices(board);
                 subVAO(boardVAO, boardVBO, boardEBO, vertices, BOARD_VERTICES_NUMBER*sizeof(float), indices, BOARD_INDICES_NUMBER*sizeof(unsigned int));
-                free(vertices);
-                free(indices);
             }
             else
             {
+                //Move Piece moves the selected piece and cleans the board of the other legal moves and takes, returns what type of move took place
                 int typeOfMove = MovePiece(board, xpos, ypos, firstClickCoords[0], firstClickCoords[1]);
-                //When the flag is a 0 we move the piece to where the user click --TODO-- this is where take rules inhabit
+
+                //1 is a regular move or the piece was deselected
                 if (typeOfMove == 1)
                 {
-                    //This then requires modifying the buffers of the pieceVAO so that a correct state of the board can be rendered
+                    //This then requires modifying the buffers so that a correct state of the board can be rendered
                     vertices = createBoardVertices(board);
                     indices = createBoardIndices(board);
                     subVAO(boardVAO, boardVBO, boardEBO, vertices, BOARD_VERTICES_NUMBER*sizeof(float) , indices, BOARD_INDICES_NUMBER*sizeof(unsigned int));
-                    free(vertices);
-                    free(indices);
 
+                    //Similarly the piece buffers also have to be modified as a piece is in a different location 
                     vertices = createPieceVertices(board);
                     indices = createPieceIndices(board);
-
                     subVAO(pieceVAO, pieceVBO, pieceEBO, vertices, PIECE_VERTICES_NUMBER*sizeof(float)-takeNumber*24,
-                                                         indices,  PIECE_INDICES_NUMBER*sizeof(unsigned int)-takeNumber*6);
-                    free(vertices);
-                    free(indices);          
+                                                         indices,  PIECE_INDICES_NUMBER*sizeof(unsigned int)-takeNumber*6);          
                     firstClick = 1;
                 }
+                //2 is a take of some kind
                 else if (typeOfMove == 2)
                 {
+                    //Increment the take number and delete the current piece buffers, one less piece means new buffer sizes
                     takeNumber++;
                     glDeleteVertexArrays(1, pieceVAO);
                     glDeleteBuffers(1,  pieceVBO);
                     glDeleteBuffers(1, pieceEBO);
 
+                    //The board is modified as if it was a regular change
+                    vertices = createBoardVertices(board);
+                    indices = createBoardIndices(board);
+                    subVAO(boardVAO, boardVBO, boardEBO, vertices, BOARD_VERTICES_NUMBER*sizeof(float) , indices, BOARD_INDICES_NUMBER*sizeof(unsigned int));
+
+                    //The piece buffers on the other hand have to be made again as there are less pieces and hence vertices and indices
                     vertices = createPieceVertices(board);
                     indices = createPieceIndices(board);
                     genVAO(pieceVAO, pieceVBO, pieceEBO, vertices, PIECE_VERTICES_NUMBER*sizeof(float)-takeNumber*24,
                                                          indices,  PIECE_INDICES_NUMBER*sizeof(unsigned int) - takeNumber*6, 1, 6);
-                    free(vertices);
-                    free(indices);
-
-                    vertices = createBoardVertices(board);
-                    indices = createBoardIndices(board);
-                    subVAO(boardVAO, boardVBO, boardEBO, vertices, BOARD_VERTICES_NUMBER*sizeof(float) , indices, BOARD_INDICES_NUMBER*sizeof(unsigned int));
-                    free(vertices);
-                    free(indices);
                     
                     firstClick = 1;
                 }
+                //There is another possible return, 0, which means that an invalid move was selected and to not change the buffers
             }
         }
     }
@@ -230,7 +239,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-//Very basic setup of VAOs, VBOs and EBOs, all data is passed in
+//Very basic setup of VAOs, VBOs and EBOs, all data is passed in -- CHANGE-- vertex and index arrays are freed at the end
 void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize, int modVAO, unsigned int strideSize)
 {
     glGenVertexArrays(1, VAO);
@@ -262,8 +271,10 @@ void genVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vert
     }
 
     glBindVertexArray(0);
+    free(vertices);
+    free(indices);
 }
-
+//Similar to genVAO but just subs the data in the buffers (has to be same size) -- CHANGE-- vertex and index arrays are freed at the end
 void subVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vertices, unsigned long long verticesSize, unsigned int *indices, unsigned long long indicesSize)
 {
     glBindVertexArray(*VAO);
@@ -275,4 +286,6 @@ void subVAO(unsigned int *VAO, unsigned int *VBO, unsigned int *EBO, float *vert
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, indicesSize, indices);
 
     glBindVertexArray(0);
+    free(vertices);
+    free(indices);
 }
